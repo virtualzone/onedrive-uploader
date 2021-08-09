@@ -20,13 +20,14 @@ var (
 
 func printHelp() {
 	flag.Usage()
-	log("  login                              Perform login")
-	log("  mkdir [path]                       Create remote directory <path>")
-	log("  ls [path]                          List items in <path>")
-	log("  rm [path]                          Delete <path>")
-	log("  upload [localFile] [path]          Upload <localFile> to <path>")
-	log("  download [sourceFile] [localPath]  Download <sourceFile> to <localPath>")
-	log("  help                               Show help")
+	log("  login                              perform login")
+	log("  mkdir [path]                       create remote directory <path>")
+	log("  ls [path]                          list items in <path>")
+	log("  rm [path]                          delete <path>")
+	log("  upload [localFile] [path]          upload <localFile> to <path>")
+	log("  download [sourceFile] [localPath]  download <sourceFile> to <localPath>")
+	log("  help                               show help")
+	log("  version                            show version")
 }
 
 func prepareFlags() {
@@ -49,21 +50,22 @@ func log(s string) {
 
 func logError(s string) {
 	fmt.Println(s)
-	os.Exit(2)
+	os.Exit(1)
 }
 
 func main() {
 	prepareFlags()
-	logVerbose("OneDrive Uploader " + AppVersion)
 	cmd := ""
 	if flag.NArg() > 0 {
 		cmd = strings.ToLower(flag.Args()[0])
 	}
 	cmdDef := commands[cmd]
 	if cmdDef == nil {
+		log("OneDrive Uploader " + AppVersion)
 		printHelp()
 		return
 	}
+	logVerbose("OneDrive Uploader " + AppVersion)
 	args := []string{}
 	if flag.NArg() > 1 {
 		args = flag.Args()[1:]

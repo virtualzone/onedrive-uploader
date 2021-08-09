@@ -20,6 +20,7 @@ var (
 		"download": {Fn: cmdDownload, MinArgs: 2, InitSecretStore: true},
 		"rm":       {Fn: cmdDelete, MinArgs: 1, InitSecretStore: true},
 		"ls":       {Fn: cmdList, MinArgs: 1, InitSecretStore: true},
+		"version":  {Fn: cmdVersion, MinArgs: 0, InitSecretStore: false},
 	}
 )
 
@@ -81,4 +82,8 @@ func cmdList(client *sdk.Client, args []string) {
 		}
 		log(itemType + " " + item.Name)
 	}
+}
+
+func cmdVersion(client *sdk.Client, args []string) {
+	log(AppVersion)
 }
