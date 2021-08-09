@@ -103,6 +103,15 @@ func (client *Client) httpSendJSON(method, uri string, o interface{}) (int, []by
 	return client.httpRequest(method, uri, requestHeaders, nil, payload)
 }
 
+func (client *Client) httpDelete(uri string) (int, error) {
+	requestHeaders := make(HTTPRequestParams)
+	if client.SecretStore.AccessToken != "" {
+		requestHeaders["Authorization"] = "Bearer " + client.SecretStore.AccessToken
+	}
+	status, _, err := client.httpRequest("DELETE", uri, requestHeaders, nil, nil)
+	return status, err
+}
+
 func (client *Client) httpPostJSON(uri string, o interface{}) (int, []byte, error) {
 	return client.httpSendJSON("POST", uri, o)
 }

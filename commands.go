@@ -15,6 +15,7 @@ var (
 		"login":  {Fn: cmdLogin, MinArgs: 0, InitSecretStore: false},
 		"mkdir":  {Fn: cmdCreateDir, MinArgs: 1, InitSecretStore: true},
 		"upload": {Fn: cmdUpload, MinArgs: 2, InitSecretStore: true},
+		"rm":     {Fn: cmdDelete, MinArgs: 1, InitSecretStore: true},
 	}
 )
 
@@ -45,4 +46,12 @@ func cmdUpload(client *sdk.Client, args []string) {
 		return
 	}
 	log("File uploaded.")
+}
+
+func cmdDelete(client *sdk.Client, args []string) {
+	if err := client.Delete(args[0]); err != nil {
+		logError("Could not delete: " + err.Error())
+		return
+	}
+	log("Deleted.")
 }

@@ -11,6 +11,7 @@ import (
 
 type Flags struct {
 	Verbose bool
+	Quiet   bool
 }
 
 var (
@@ -22,10 +23,12 @@ func printHelp() {
 	log("  login                        Perform login")
 	log("  mkdir [path]                 Create remote directory <path>")
 	log("  upload [path] [localFile]    Upload <localFile> to <path>")
+	log("  rm [path]                    Delete <path>")
 	log("  help                         Show commands")
 }
 
 func prepareFlags() {
+	flag.BoolVar(&AppFlags.Quiet, "q", false, "output errors only")
 	flag.BoolVar(&AppFlags.Verbose, "v", false, "verbose output")
 	flag.Parse()
 }
@@ -37,7 +40,9 @@ func logVerbose(s string) {
 }
 
 func log(s string) {
-	fmt.Println(s)
+	if !AppFlags.Quiet {
+		fmt.Println(s)
+	}
 }
 
 func logError(s string) {
@@ -47,7 +52,7 @@ func logError(s string) {
 
 func main() {
 	prepareFlags()
-	logVerbose("OneDrive Uploader")
+	logVerbose("OneDrive Uploader " + AppVersion)
 	cmd := ""
 	if flag.NArg() > 0 {
 		cmd = strings.ToLower(flag.Args()[0])

@@ -1,9 +1,12 @@
-VERSION=0.0.1
+VERSION=`cat ./VERSION | awk NF`
 
-all: clean linux macos windows
+all: clean update_version_file linux macos windows
 
 clean:
 	rm -f build/*
+
+update_version_file:
+	echo "package main\n\nvar AppVersion = \"${VERSION}\"" > version.go
 
 linux: linux_amd64 linux_arm64 linux_arm
 
