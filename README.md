@@ -23,11 +23,9 @@ OneDrive Uploader requires an application to be registered with Microsoft. This 
     1. Access to entire OneDrive: ```Files.Read, Files.ReadWrite, Files.Read.All, Files.ReadWrite.All, offline_access, User.Read```
 
 ### 2. Download the binary
-Download the appropriate binary for your operating system from the [Releases page](https://github.com/virtualzone/onedrive-uploader/releases) and make it executable.
+Download the appropriate binary for your operating system from the [Releases page](https://github.com/virtualzone/onedrive-uploader/releases) and make it executable:
 
-Example:
 ```
-curl https://github.com/virtualzone/onedrive-uploader/releases/download/v0.2.0/onedrive-uploader_linux_amd64_v0.2.0 --output onedrive-uploader
 chmod +x onedrive-uploader
 ```
 
