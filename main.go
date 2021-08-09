@@ -20,12 +20,13 @@ var (
 
 func printHelp() {
 	flag.Usage()
-	log("  login                        Perform login")
-	log("  mkdir [path]                 Create remote directory <path>")
-	log("  upload [path] [localFile]    Upload <localFile> to <path>")
-	log("  rm [path]                    Delete <path>")
-	log("  ls [path]                    List items in <path>")
-	log("  help                         Show commands")
+	log("  login                              Perform login")
+	log("  mkdir [path]                       Create remote directory <path>")
+	log("  ls [path]                          List items in <path>")
+	log("  rm [path]                          Delete <path>")
+	log("  upload [localFile] [path]          Upload <localFile> to <path>")
+	log("  download [sourceFile] [localPath]  Download <sourceFile> to <localPath>")
+	log("  help                               Show help")
 }
 
 func prepareFlags() {

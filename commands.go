@@ -14,11 +14,12 @@ type CommandFunctionDefinition struct {
 
 var (
 	commands = map[string]*CommandFunctionDefinition{
-		"login":  {Fn: cmdLogin, MinArgs: 0, InitSecretStore: false},
-		"mkdir":  {Fn: cmdCreateDir, MinArgs: 1, InitSecretStore: true},
-		"upload": {Fn: cmdUpload, MinArgs: 2, InitSecretStore: true},
-		"rm":     {Fn: cmdDelete, MinArgs: 1, InitSecretStore: true},
-		"ls":     {Fn: cmdList, MinArgs: 1, InitSecretStore: true},
+		"login":    {Fn: cmdLogin, MinArgs: 0, InitSecretStore: false},
+		"mkdir":    {Fn: cmdCreateDir, MinArgs: 1, InitSecretStore: true},
+		"upload":   {Fn: cmdUpload, MinArgs: 2, InitSecretStore: true},
+		"download": {Fn: cmdDownload, MinArgs: 2, InitSecretStore: true},
+		"rm":       {Fn: cmdDelete, MinArgs: 1, InitSecretStore: true},
+		"ls":       {Fn: cmdList, MinArgs: 1, InitSecretStore: true},
 	}
 )
 
@@ -49,6 +50,14 @@ func cmdUpload(client *sdk.Client, args []string) {
 		return
 	}
 	log("File uploaded.")
+}
+
+func cmdDownload(client *sdk.Client, args []string) {
+	if err := client.Download(args[0], args[1]); err != nil {
+		logError("Could not download file: " + err.Error())
+		return
+	}
+	log("File downloaded.")
 }
 
 func cmdDelete(client *sdk.Client, args []string) {

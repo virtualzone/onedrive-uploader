@@ -25,7 +25,7 @@ type UploadSessionResponse struct {
 
 type EmptyStruct struct{}
 
-func (client *Client) Upload(targetFolder, localFilePath string) error {
+func (client *Client) Upload(localFilePath, targetFolder string) error {
 	fileName := filepath.Base(localFilePath)
 	if fileName == "" || fileName == "." || fileName == ".." {
 		return errors.New("please specify a file, not a directory")

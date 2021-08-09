@@ -144,6 +144,7 @@ func (client *Client) httpRequest(method, uri string, requestHeaders, params HTT
 	if err != nil {
 		return -1, nil, err
 	}
+	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return -1, nil, err
