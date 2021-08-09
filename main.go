@@ -1,64 +1,87 @@
 package main
 
 import (
-	"log"
+	"flag"
+	"fmt"
 	"os"
 	"strings"
 
 	"github.com/virtualzone/onedrive-uploader/sdk"
 )
 
+type Flags struct {
+	Verbose bool
+}
+
+var (
+	AppFlags = Flags{}
+)
+
 func printHelp() {
-	log.Println("Usage:")
-	log.Println("    login                        Perform login")
-	log.Println("    mkdir [path]                 Create remote directory <path>")
-	log.Println("    upload [path] [localFile]    Upload <localFile> to <path>")
-	log.Println("    help                         Show commands")
+	flag.Usage()
+	log("  login                        Perform login")
+	log("  mkdir [path]                 Create remote directory <path>")
+	log("  upload [path] [localFile]    Upload <localFile> to <path>")
+	log("  help                         Show commands")
+}
+
+func prepareFlags() {
+	flag.BoolVar(&AppFlags.Verbose, "v", false, "verbose output")
+	flag.Parse()
+}
+
+func logVerbose(s string) {
+	if AppFlags.Verbose {
+		fmt.Println(s)
+	}
+}
+
+func log(s string) {
+	fmt.Println(s)
+}
+
+func logError(s string) {
+	fmt.Println(s)
+	os.Exit(2)
 }
 
 func main() {
-	log.Println("OneDrive Uploader")
-	args := os.Args[1:]
-	if len(args) == 0 {
+	prepareFlags()
+	logVerbose("OneDrive Uploader")
+	cmd := ""
+	if flag.NArg() > 0 {
+		cmd = strings.ToLower(flag.Args()[0])
+	}
+	cmdDef := commands[cmd]
+	if cmdDef == nil {
 		printHelp()
 		return
 	}
-	log.Println("Reading config...")
+	args := []string{}
+	if flag.NArg() > 1 {
+		args = flag.Args()[1:]
+	}
+	if len(args) < cmdDef.MinArgs {
+		printHelp()
+		return
+	}
 	conf, err := sdk.ReadConfig("./config.json")
 	if err != nil {
-		log.Fatalln("Could not read config")
+		logError("Could not read config: " + err.Error())
+		return
 	}
 	client := sdk.CreateClient(conf)
-	cmd := strings.ToLower(args[0])
-	if cmd == "login" {
-		log.Println("------------------------------------")
-		log.Println("Open a browser and go to:")
-		log.Println(client.GetLoginURL())
-		log.Println("------------------------------------")
-		log.Println("Waiting for code...")
-		client.Login()
-	}
-	if cmd == "help" {
-		printHelp()
-	}
-	if cmd == "mkdir" {
-		if len(args) < 2 {
-			printHelp()
+	if cmdDef.InitSecretStore {
+		logVerbose("Reading secret store...")
+		if err := client.ReadSecretStore(); err != nil {
+			logError("Could not read secret store: " + err.Error())
 			return
 		}
-		client.ReadSecretStore()
-		log.Println("Renewing access token...")
-		client.RenewAccessToken()
-		client.CreateDir(args[1])
-	}
-	if cmd == "upload" {
-		if len(args) < 3 {
-			printHelp()
+		logVerbose("Renewing access token...")
+		if _, err := client.RenewAccessToken(); err != nil {
+			logError("Could not renew access token: " + err.Error())
 			return
 		}
-		client.ReadSecretStore()
-		log.Println("Renewing access token...")
-		client.RenewAccessToken()
-		client.Upload(args[1], args[2])
 	}
+	cmdDef.Fn(client, args)
 }

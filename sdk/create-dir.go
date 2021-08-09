@@ -29,7 +29,7 @@ func (client *Client) CreateDir(path string) error {
 	req := &CreateFolderRequest{
 		Name:             newFolder,
 		Folder:           FolderProperties{},
-		ConflictBehavior: "rename",
+		ConflictBehavior: "fail",
 	}
 	url := GraphURL + "me" + client.Config.Root + ":" + parentPath + ":/children"
 	if parentPath == "/" {
@@ -38,6 +38,10 @@ func (client *Client) CreateDir(path string) error {
 	status, _, err := client.httpPostJSON(url, req)
 	if err != nil {
 		return err
+	}
+	if status == http.StatusConflict {
+		// Already exists
+		return nil
 	}
 	if status != http.StatusCreated {
 		return errors.New("received unexpected status code " + strconv.Itoa(status))
