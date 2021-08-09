@@ -86,10 +86,12 @@ func main() {
 			logError("Could not read secret store: " + err.Error())
 			return
 		}
-		logVerbose("Renewing access token...")
-		if _, err := client.RenewAccessToken(); err != nil {
-			logError("Could not renew access token: " + err.Error())
-			return
+		if client.ShouldRenewAccessToken() {
+			logVerbose("Renewing access token...")
+			if _, err := client.RenewAccessToken(); err != nil {
+				logError("Could not renew access token: " + err.Error())
+				return
+			}
 		}
 	}
 	cmdDef.Fn(client, args)

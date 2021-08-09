@@ -93,6 +93,12 @@ func (client *Client) redeemCodeForAccessToken(code string) (*LoginRedeemCodeRes
 	return &json, nil
 }
 
+func (client *Client) ShouldRenewAccessToken() bool {
+	now := time.Now()
+	diff := now.Sub(client.SecretStore.Expiry)
+	return diff.Minutes() > -30
+}
+
 func (client *Client) RenewAccessToken() (*LoginRedeemCodeResponse, error) {
 	params := make(HTTPRequestParams)
 	params["client_id"] = client.Config.ClientID
