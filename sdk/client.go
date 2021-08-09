@@ -112,6 +112,14 @@ func (client *Client) httpDelete(uri string) (int, error) {
 	return status, err
 }
 
+func (client *Client) httpGet(uri string, params HTTPRequestParams) (int, []byte, error) {
+	requestHeaders := make(HTTPRequestParams)
+	if client.SecretStore.AccessToken != "" {
+		requestHeaders["Authorization"] = "Bearer " + client.SecretStore.AccessToken
+	}
+	return client.httpRequest("GET", uri, requestHeaders, params, nil)
+}
+
 func (client *Client) httpPostJSON(uri string, o interface{}) (int, []byte, error) {
 	return client.httpSendJSON("POST", uri, o)
 }

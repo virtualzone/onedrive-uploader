@@ -1,6 +1,8 @@
 package main
 
-import "github.com/virtualzone/onedrive-uploader/sdk"
+import (
+	"github.com/virtualzone/onedrive-uploader/sdk"
+)
 
 type CommandFunction func(client *sdk.Client, args []string)
 
@@ -16,6 +18,7 @@ var (
 		"mkdir":  {Fn: cmdCreateDir, MinArgs: 1, InitSecretStore: true},
 		"upload": {Fn: cmdUpload, MinArgs: 2, InitSecretStore: true},
 		"rm":     {Fn: cmdDelete, MinArgs: 1, InitSecretStore: true},
+		"ls":     {Fn: cmdList, MinArgs: 1, InitSecretStore: true},
 	}
 )
 
@@ -54,4 +57,19 @@ func cmdDelete(client *sdk.Client, args []string) {
 		return
 	}
 	log("Deleted.")
+}
+
+func cmdList(client *sdk.Client, args []string) {
+	list, err := client.List(args[0])
+	if err != nil {
+		logError("Could not list: " + err.Error())
+		return
+	}
+	for _, item := range list {
+		itemType := "d"
+		if item.File.MimeType != "" {
+			itemType = "f"
+		}
+		log(itemType + " " + item.Name)
+	}
 }

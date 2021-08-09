@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"io/ioutil"
+	"strings"
 )
 
 type Config struct {
@@ -21,6 +22,10 @@ func ReadConfig(filename string) (*Config, error) {
 	var config Config
 	if err := UnmarshalJSON(&config, data); err != nil {
 		return nil, err
+	}
+	config.Root = strings.TrimSuffix(config.Root, "/")
+	if !strings.HasPrefix(config.Root, "/") {
+		config.Root = "/" + config.Root
 	}
 	return &config, nil
 }

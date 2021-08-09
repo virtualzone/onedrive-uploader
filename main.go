@@ -24,6 +24,7 @@ func printHelp() {
 	log("  mkdir [path]                 Create remote directory <path>")
 	log("  upload [path] [localFile]    Upload <localFile> to <path>")
 	log("  rm [path]                    Delete <path>")
+	log("  ls [path]                    List items in <path>")
 	log("  help                         Show commands")
 }
 
