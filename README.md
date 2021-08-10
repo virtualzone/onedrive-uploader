@@ -15,7 +15,7 @@ OneDrive Uploader requires an application to be registered with Microsoft. This 
 
 1. Log in to the [Microsoft Azure Portal](https://portal.azure.com/).
 1. Navigate to "App registrations".
-1. Create a new application with the following redirect URL: http://localhost:53682/
+1. Create a new application with supported account type "Accounts in any organizational directory (Any Azure AD directory - Multitenant) and personal Microsoft accounts (e.g. Skype, Xbox)" and the following Web redirect URL: http://localhost:53682/
 1. Copy the Application (client) ID.
 1. Navigate to "Certificates & secrets", create a new Client secret and copy the Secret Value (*not* the ID).
 1. Navigate to "API permissions", click "Add permission", choose "Microsoft Graph", select "Delegated". Then search and add the required permissions:
@@ -32,8 +32,25 @@ chmod +x onedrive-uploader
 ### 3. Create a configuration file
 In the binary's folder, create a configuration file named ```config.json```.
 
-The following is an example for an App registered with permissions to access the App's Folder:
+Example ```config.json``` for an App with access to a user's entire OneDrive:
+```
+{
+    "client_id": "019ccb8b-118f-4559-ad2c-2ccda5b9def6",
+    "client_secret": "some-client-secret",
+    "scopes": [
+        "Files.Read",
+        "Files.ReadWrite",
+        "Files.Read.All",
+        "Files.ReadWrite.All",
+        "offline_access"
+    ],
+    "redirect_uri": "http://localhost:53682/",
+    "secret_store": "./secret.json",
+    "root": "/drive/root"
+}
+```
 
+Example ```config.json``` for an App registered with permissions to access the App's Folder:
 ```
 {
     "client_id": "019ccb8b-118f-4559-ad2c-2ccda5b9def6",
@@ -97,4 +114,9 @@ onedrive-uploader rm /notes.docx
 Print help and available commands:
 ```
 onedrive-uploader help
+```
+
+Use config file at a specific path:
+```
+onedrive-uploader -c /path/to/config.json mkdir test
 ```
