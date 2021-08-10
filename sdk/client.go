@@ -149,5 +149,6 @@ func (client *Client) httpRequest(method, uri string, requestHeaders, params HTT
 	if err != nil {
 		return -1, nil, err
 	}
+	//log.Println(string(body))
 	return resp.StatusCode, body, nil
 }
