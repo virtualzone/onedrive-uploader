@@ -27,6 +27,9 @@ func printHelp() {
 	log("  rm path                            delete <path>")
 	log("  upload localFile path              upload <localFile> to <path>")
 	log("  download sourceFile localPath      download <sourceFile> to <localPath>")
+	log("  info path                          show info about <path>")
+	log("  sha1 path                          get SHA1 hash for <path>")
+	log("  sha256 path                        get SHA256 hash for <path>")
 	log("  help                               show help")
 	log("  version                            show version")
 }

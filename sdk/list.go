@@ -7,21 +7,6 @@ import (
 	"strings"
 )
 
-type FileItem struct {
-	MimeType string `json:"mimeType"`
-}
-
-type FolderItem struct {
-	ChildCount int `json:"childCount"`
-}
-
-type DriveItem struct {
-	Name      string     `json:"name"`
-	SizeBytes int64      `json:"size"`
-	File      FileItem   `json:"file"`
-	Folder    FolderItem `json:"folder"`
-}
-
 type ListResponse struct {
 	Items    []DriveItem `json:"value"`
 	NextLink string      `json:"@odata.nextLink"`

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"strconv"
+
 	"github.com/virtualzone/onedrive-uploader/sdk"
 )
 
@@ -20,6 +22,9 @@ var (
 		"download": {Fn: cmdDownload, MinArgs: 2, InitSecretStore: true},
 		"rm":       {Fn: cmdDelete, MinArgs: 1, InitSecretStore: true},
 		"ls":       {Fn: cmdList, MinArgs: 1, InitSecretStore: true},
+		"info":     {Fn: cmdInfo, MinArgs: 1, InitSecretStore: true},
+		"sha1":     {Fn: cmdSHA1, MinArgs: 1, InitSecretStore: true},
+		"sha256":   {Fn: cmdSHA256, MinArgs: 1, InitSecretStore: true},
 		"version":  {Fn: cmdVersion, MinArgs: 0, InitSecretStore: false},
 	}
 )
@@ -82,6 +87,46 @@ func cmdList(client *sdk.Client, args []string) {
 		}
 		log(itemType + " " + item.Name)
 	}
+}
+
+func cmdInfo(client *sdk.Client, args []string) {
+	item, err := client.Info(args[0])
+	if err != nil {
+		logError("Could not get info: " + err.Error())
+		return
+	}
+	itemType := "folder"
+	if item.File.MimeType != "" {
+		itemType = "file"
+	}
+	log("Type:           " + itemType)
+	log("Size:           " + strconv.FormatInt(item.SizeBytes, 10) + " bytes")
+	if itemType == "folder" {
+		log("Child Count:    " + strconv.Itoa(item.Folder.ChildCount))
+	} else {
+		log("MIME Type:      " + item.File.MimeType)
+		log("SHA1 Hash:      " + item.File.Hashes.SHA1)
+		log("SHA256 Hash:    " + item.File.Hashes.SHA256)
+		log("Quick XOR Hash: " + item.File.Hashes.QuickXOR)
+	}
+}
+
+func cmdSHA1(client *sdk.Client, args []string) {
+	item, err := client.Info(args[0])
+	if err != nil {
+		logError("Could not get info: " + err.Error())
+		return
+	}
+	log(item.File.Hashes.SHA1)
+}
+
+func cmdSHA256(client *sdk.Client, args []string) {
+	item, err := client.Info(args[0])
+	if err != nil {
+		logError("Could not get info: " + err.Error())
+		return
+	}
+	log(item.File.Hashes.SHA256)
 }
 
 func cmdVersion(client *sdk.Client, args []string) {
