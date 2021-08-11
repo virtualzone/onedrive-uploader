@@ -5,6 +5,7 @@ Command line (CLI) utility for uploading files to Microsoft OneDrive using the M
 * Upload, download and delete files
 * Create and delete directories
 * List folder contents
+* Get information (including SHA1 and SHA256 hashes) for drive items
 * Supports "special folders" (such as App Folder / App Root)
 * Pre-compiled binaries on Linux, MacOS and Windows
 
@@ -24,9 +25,15 @@ OneDrive Uploader requires an application to be registered with Microsoft. This 
 
 ### 2. Download the binary
 Download the appropriate binary for your operating system from the [Releases page](https://github.com/virtualzone/onedrive-uploader/releases) and make it executable:
-
 ```
 chmod +x onedrive-uploader
+```
+
+If you want to build the binaries from source instead, clone the repository and execute ```make```. This requires Go to be installed.
+```
+git clone https://github.com/virtualzone/onedrive-uploader.git
+cd onedrive-uploader
+make
 ```
 
 ### 3. Create a configuration file
@@ -109,6 +116,21 @@ onedrive-uploader download /notes.docx /tmp
 Delete "notes.docx" from the root directory:
 ```
 onedrive-uploader rm /notes.docx
+```
+
+Get information about file "notes.docx" in folder "test":
+```
+onedrive-uploader info /test/notes.docx
+```
+
+Get SHA1 hash for file "notes.docx" in folder "test":
+```
+onedrive-uploader sha1 /test/notes.docx
+```
+
+Get SHA256 hash for file "notes.docx" in folder "test":
+```
+onedrive-uploader sha256 /test/notes.docx
 ```
 
 Print help and available commands:
