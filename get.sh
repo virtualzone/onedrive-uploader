@@ -17,6 +17,6 @@ if [[ $URL == "" ]]; then
 fi
 echo "Please specify your sudo password when asked. It's required to write the binary to: /usr/local/bin/"
 sudo curl -s -L "${URL}" -o /usr/local/bin/onedrive-uploader && \
-    chmod +x /usr/local/bin/onedrive-uploader &&
+    sudo chmod +x /usr/local/bin/onedrive-uploader &&
     VERSION=`/usr/local/bin/onedrive-uploader version` &&
     echo "Successfully installed OneDrive Uploader ${VERSION}."
