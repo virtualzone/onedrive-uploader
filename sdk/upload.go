@@ -4,7 +4,6 @@ import (
 	"errors"
 	"io/ioutil"
 	"mime"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -75,7 +74,7 @@ func (client *Client) uploadToSession(uploadUrl, mimeType, localFilePath string,
 		if err != nil {
 			return err
 		}
-		if status != http.StatusAccepted && status != http.StatusCreated {
+		if !IsHTTPStatusOK(status) {
 			return errors.New("received unexpected status code " + strconv.Itoa(status))
 		}
 		offset += int64(n)
@@ -91,7 +90,7 @@ func (client *Client) startUploadSession(fileName, targetFolder string) (*Upload
 	if err != nil {
 		return nil, err
 	}
-	if status != http.StatusOK {
+	if !IsHTTPStatusOK(status) {
 		return nil, errors.New("received unexpected status code " + strconv.Itoa(status))
 	}
 	var uploadSession UploadSessionResponse
@@ -112,7 +111,7 @@ func (client *Client) uploadSimple(fileName, mimeType, targetFolder, localFilePa
 	if err != nil {
 		return err
 	}
-	if status != http.StatusCreated {
+	if !IsHTTPStatusOK(status) {
 		return errors.New("received unexpected status code " + strconv.Itoa(status))
 	}
 	return nil

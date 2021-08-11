@@ -41,6 +41,10 @@ func UnmarshalJSON(o interface{}, body []byte) error {
 	return nil
 }
 
+func IsHTTPStatusOK(status int) bool {
+	return (200 <= status && status <= 299)
+}
+
 func (client *Client) buildURIParams(params HTTPRequestParams) string {
 	if params != nil {
 		var b strings.Builder
