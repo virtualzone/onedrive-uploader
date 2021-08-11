@@ -81,11 +81,14 @@ You can set the following properties:
 * ```root```: Root folder within your OneDrive
 
 ### 4. Perform login
-To log in with your OneDrive account, execute the following command on a computer which has a web browser running. On headless machines, perform this task on a computer *with* a web browser and copy the ```secret.json``` the headless computer afterwards.
-
+To log in with your OneDrive account, execute the following command on a computer which has a web browser running:
 ```
 onedrive-uploader login
 ```
+
+For headless machines you must perform the actual login on a computer *with* a web browser. To do this, you can...
+* ...either have the same ```config.json``` on your headless machine and your computer with a web browser and then copy the ```secret.json``` to the headless computer after having logged in
+* ...or forward port 53682 from your computer with a web brower to your headless machine, e.g. by using SSH: ```ssh -L 53682:headless_ip:53682 user@headless_ip```
 
 ## Commands and example usage
 Create a new remote directory named "test":
