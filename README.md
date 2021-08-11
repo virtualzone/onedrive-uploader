@@ -81,7 +81,7 @@ You can set the following properties:
 * ```root```: Root folder within your OneDrive
 
 ### 4. Perform login
-To log in with your OneDrive account, execute the following command on a computer which has a web browser running:
+To log in with your OneDrive account, execute the following command:
 ```
 onedrive-uploader login
 ```
