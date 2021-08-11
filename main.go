@@ -21,17 +21,17 @@ var (
 
 func printHelp() {
 	flag.Usage()
-	log("  login                              perform login")
-	log("  mkdir path                         create remote directory <path>")
-	log("  ls path                            list items in <path>")
-	log("  rm path                            delete <path>")
-	log("  upload localFile path              upload <localFile> to <path>")
-	log("  download sourceFile localPath      download <sourceFile> to <localPath>")
-	log("  info path                          show info about <path>")
-	log("  sha1 path                          get SHA1 hash for <path>")
-	log("  sha256 path                        get SHA256 hash for <path>")
-	log("  help                               show help")
-	log("  version                            show version")
+	print("  login                              perform login")
+	print("  mkdir path                         create remote directory <path>")
+	print("  ls path                            list items in <path>")
+	print("  rm path                            delete <path>")
+	print("  upload localFile path              upload <localFile> to <path>")
+	print("  download sourceFile localPath      download <sourceFile> to <localPath>")
+	print("  info path                          show info about <path>")
+	print("  sha1 path                          get SHA1 hash for <path>")
+	print("  sha256 path                        get SHA256 hash for <path>")
+	print("  help                               show help")
+	print("  version                            show version")
 }
 
 func prepareFlags() {
@@ -45,6 +45,10 @@ func logVerbose(s string) {
 	if AppFlags.Verbose {
 		fmt.Println(s)
 	}
+}
+
+func print(s string) {
+	fmt.Println(s)
 }
 
 func log(s string) {
@@ -66,7 +70,7 @@ func main() {
 	}
 	cmdDef := commands[cmd]
 	if cmdDef == nil {
-		log("OneDrive Uploader " + AppVersion)
+		print("OneDrive Uploader " + AppVersion)
 		printHelp()
 		return
 	}

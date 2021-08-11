@@ -32,7 +32,7 @@ var (
 func cmdLogin(client *sdk.Client, args []string) {
 	log("------------------------------------")
 	log("Open a browser and go to:")
-	log(client.GetLoginURL())
+	print(client.GetLoginURL())
 	log("------------------------------------")
 	log("Waiting for code...")
 	if err := client.Login(); err != nil {
@@ -85,7 +85,7 @@ func cmdList(client *sdk.Client, args []string) {
 		if item.File.MimeType != "" {
 			itemType = "f"
 		}
-		log(itemType + " " + item.Name)
+		print(itemType + " " + item.Name)
 	}
 }
 
@@ -99,15 +99,15 @@ func cmdInfo(client *sdk.Client, args []string) {
 	if item.File.MimeType != "" {
 		itemType = "file"
 	}
-	log("Type:           " + itemType)
-	log("Size:           " + strconv.FormatInt(item.SizeBytes, 10) + " bytes")
+	print("Type:           " + itemType)
+	print("Size:           " + strconv.FormatInt(item.SizeBytes, 10) + " bytes")
 	if itemType == "folder" {
-		log("Child Count:    " + strconv.Itoa(item.Folder.ChildCount))
+		print("Child Count:    " + strconv.Itoa(item.Folder.ChildCount))
 	} else {
-		log("MIME Type:      " + item.File.MimeType)
-		log("SHA1 Hash:      " + item.File.Hashes.SHA1)
-		log("SHA256 Hash:    " + item.File.Hashes.SHA256)
-		log("Quick XOR Hash: " + item.File.Hashes.QuickXOR)
+		print("MIME Type:      " + item.File.MimeType)
+		print("SHA1 Hash:      " + item.File.Hashes.SHA1)
+		print("SHA256 Hash:    " + item.File.Hashes.SHA256)
+		print("Quick XOR Hash: " + item.File.Hashes.QuickXOR)
 	}
 }
 
@@ -117,7 +117,7 @@ func cmdSHA1(client *sdk.Client, args []string) {
 		logError("Could not get info: " + err.Error())
 		return
 	}
-	log(item.File.Hashes.SHA1)
+	print(item.File.Hashes.SHA1)
 }
 
 func cmdSHA256(client *sdk.Client, args []string) {
@@ -126,9 +126,9 @@ func cmdSHA256(client *sdk.Client, args []string) {
 		logError("Could not get info: " + err.Error())
 		return
 	}
-	log(item.File.Hashes.SHA256)
+	print(item.File.Hashes.SHA256)
 }
 
 func cmdVersion(client *sdk.Client, args []string) {
-	log(AppVersion)
+	print(AppVersion)
 }
