@@ -2,3 +2,4 @@ config.json
 config-approot.json
 secret.json
 build/
+.DS_Store
