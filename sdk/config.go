@@ -14,11 +14,7 @@ type Config struct {
 	Root         string   `json:"root"`
 }
 
-func ReadConfig(filename string) (*Config, error) {
-	data, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return nil, err
-	}
+func ReadConfigData(data []byte) (*Config, error) {
 	var config Config
 	if err := UnmarshalJSON(&config, data); err != nil {
 		return nil, err
@@ -28,4 +24,12 @@ func ReadConfig(filename string) (*Config, error) {
 		config.Root = "/" + config.Root
 	}
 	return &config, nil
+}
+
+func ReadConfig(filename string) (*Config, error) {
+	data, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return nil, err
+	}
+	return ReadConfigData(data)
 }
