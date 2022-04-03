@@ -8,6 +8,8 @@ if [[ "$ARCH" == "aarch64" || "$ARCH" == "aarch64_be" || "$ARCH" == "armv8b" || 
     ARCH="arm64"
 elif [[ "$ARCH" == "x86_64" ]]; then
     ARCH="amd64"
+elif [[ "$ARCH" == "armv71" ]]; then
+    ARCH="arm"
 fi
 URL=`curl -s https://api.github.com/repos/virtualzone/onedrive-uploader/releases/latest | grep "browser_download_url" | grep "_${OS}_${ARCH}_" | cut -d : -f 2,3 | tr -d \" | xargs`
 if [[ $URL == "" ]]; then
