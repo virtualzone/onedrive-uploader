@@ -1,4 +1,9 @@
 # OneDrive Uploader
+[![](https://img.shields.io/github/v/release/virtualzone/onedrive-uploader)](https://github.com/virtualzone/onedrive-uploader/releases)
+[![](https://img.shields.io/github/release-date/virtualzone/onedrive-uploader)](https://github.com/virtualzone/onedrive-uploader/releases)
+[![](https://img.shields.io/github/workflow/status/virtualzone/onedrive-uploader/build-release)](https://github.com/virtualzone/onedrive-uploader/actions)
+[![](https://img.shields.io/github/license/virtualzone/onedrive-uploader)](https://github.com/virtualzone/onedrive-uploader/blob/master/LICENSE)
+
 Command line (CLI) utility for uploading files to Microsoft OneDrive using the Microsoft Graph REST API.
 
 ## Features
