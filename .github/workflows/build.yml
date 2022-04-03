@@ -1,4 +1,4 @@
-name: build-release
+name: build
 
 on:
   push:
@@ -17,16 +17,9 @@ jobs:
     - uses: actions/setup-go@v2
       with:
         go-version: '^1.18'
+    - name: Run tests
+      run: go test -cover -v
+      env:
+        CGO_ENABLED: 0
     - name: Run build
       run: make
-    - name: Set version env
-      run: echo "CI_VERSION=$(cat VERSION | awk NF)" >> $GITHUB_ENV
-    - name: Create a GitHub release
-      uses: ncipollo/release-action@v1
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        tag: ${{ env.CI_VERSION }}
-        name: ${{ env.CI_VERSION }}
-        artifacts: "build/onedrive-uploader_*"
-
-    
