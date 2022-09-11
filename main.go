@@ -83,23 +83,26 @@ func main() {
 		printHelp()
 		return
 	}
-	conf, err := sdk.ReadConfig(AppFlags.ConfigPath)
-	if err != nil {
-		logError("Could not read config: " + err.Error())
-		return
-	}
-	client := sdk.CreateClient(conf)
-	if cmdDef.InitSecretStore {
-		logVerbose("Reading secret store...")
-		if err := client.ReadSecretStore(); err != nil {
-			logError("Could not read secret store: " + err.Error())
+	var client *sdk.Client = nil
+	if cmdDef.RequireConfig {
+		conf, err := sdk.ReadConfig(AppFlags.ConfigPath)
+		if err != nil {
+			logError("Could not read config: " + err.Error())
 			return
 		}
-		if client.ShouldRenewAccessToken() {
-			logVerbose("Renewing access token...")
-			if _, err := client.RenewAccessToken(); err != nil {
-				logError("Could not renew access token: " + err.Error())
+		client = sdk.CreateClient(conf)
+		if cmdDef.InitSecretStore {
+			logVerbose("Reading secret store...")
+			if err := client.ReadSecretStore(); err != nil {
+				logError("Could not read secret store: " + err.Error())
 				return
+			}
+			if client.ShouldRenewAccessToken() {
+				logVerbose("Renewing access token...")
+				if _, err := client.RenewAccessToken(); err != nil {
+					logError("Could not renew access token: " + err.Error())
+					return
+				}
 			}
 		}
 	}

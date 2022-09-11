@@ -3,3 +3,5 @@ config-approot.json
 secret.json
 build/
 .DS_Store
+*.log
+.vscode/

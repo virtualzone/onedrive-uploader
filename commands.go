@@ -12,20 +12,21 @@ type CommandFunctionDefinition struct {
 	Fn              CommandFunction
 	MinArgs         int
 	InitSecretStore bool
+	RequireConfig   bool
 }
 
 var (
 	commands = map[string]*CommandFunctionDefinition{
-		"login":    {Fn: cmdLogin, MinArgs: 0, InitSecretStore: false},
-		"mkdir":    {Fn: cmdCreateDir, MinArgs: 1, InitSecretStore: true},
-		"upload":   {Fn: cmdUpload, MinArgs: 2, InitSecretStore: true},
-		"download": {Fn: cmdDownload, MinArgs: 2, InitSecretStore: true},
-		"rm":       {Fn: cmdDelete, MinArgs: 1, InitSecretStore: true},
-		"ls":       {Fn: cmdList, MinArgs: 1, InitSecretStore: true},
-		"info":     {Fn: cmdInfo, MinArgs: 1, InitSecretStore: true},
-		"sha1":     {Fn: cmdSHA1, MinArgs: 1, InitSecretStore: true},
-		"sha256":   {Fn: cmdSHA256, MinArgs: 1, InitSecretStore: true},
-		"version":  {Fn: cmdVersion, MinArgs: 0, InitSecretStore: false},
+		"login":    {Fn: cmdLogin, MinArgs: 0, InitSecretStore: false, RequireConfig: true},
+		"mkdir":    {Fn: cmdCreateDir, MinArgs: 1, InitSecretStore: true, RequireConfig: true},
+		"upload":   {Fn: cmdUpload, MinArgs: 2, InitSecretStore: true, RequireConfig: true},
+		"download": {Fn: cmdDownload, MinArgs: 2, InitSecretStore: true, RequireConfig: true},
+		"rm":       {Fn: cmdDelete, MinArgs: 1, InitSecretStore: true, RequireConfig: true},
+		"ls":       {Fn: cmdList, MinArgs: 1, InitSecretStore: true, RequireConfig: true},
+		"info":     {Fn: cmdInfo, MinArgs: 1, InitSecretStore: true, RequireConfig: true},
+		"sha1":     {Fn: cmdSHA1, MinArgs: 1, InitSecretStore: true, RequireConfig: true},
+		"sha256":   {Fn: cmdSHA256, MinArgs: 1, InitSecretStore: true, RequireConfig: true},
+		"version":  {Fn: cmdVersion, MinArgs: 0, InitSecretStore: false, RequireConfig: false},
 	}
 )
 
