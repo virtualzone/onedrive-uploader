@@ -30,5 +30,10 @@ func (client *Client) Info(path string) (*DriveItem, error) {
 	if err := UnmarshalJSON(&driveItem, data); err != nil {
 		return nil, err
 	}
+	if driveItem.File.MimeType != "" {
+		driveItem.Type = DriveItemTypeFile
+	} else {
+		driveItem.Type = DriveItemTypeFolder
+	}
 	return &driveItem, nil
 }

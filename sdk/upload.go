@@ -12,8 +12,8 @@ import (
 )
 
 var (
-	UploadSessionFileSizeLimit int = 4 * 1000 * 1000
-	UploadSessionMultiple      int = 320 * 1024
+	UploadSessionFileSizeLimit int = 4 * 1000 * 1000 // 4 MB
+	UploadSessionMultiple      int = 320 * 1024      // 320 KB
 	UploadSessionRangeSize     int = UploadSessionMultiple * 10
 )
 

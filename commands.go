@@ -97,7 +97,7 @@ func cmdInfo(client *sdk.Client, args []string) {
 		return
 	}
 	itemType := "folder"
-	if item.File.MimeType != "" {
+	if item.Type == sdk.DriveItemTypeFile {
 		itemType = "file"
 	}
 	print("Type:           " + itemType)

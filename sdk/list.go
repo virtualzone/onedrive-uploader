@@ -41,7 +41,13 @@ func (client *Client) List(path string) ([]*DriveItem, error) {
 	}
 	var result []*DriveItem
 	for i := range resp.Items {
-		result = append(result, &resp.Items[i])
+		driveItem := &resp.Items[i]
+		if driveItem.File.MimeType != "" {
+			driveItem.Type = DriveItemTypeFile
+		} else {
+			driveItem.Type = DriveItemTypeFolder
+		}
+		result = append(result, driveItem)
 	}
 	return result, nil
 }
