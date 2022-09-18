@@ -22,12 +22,20 @@ type FolderItem struct {
 	ChildCount int `json:"childCount"`
 }
 
+type DriveItemType int
+
+const (
+	DriveItemTypeFile   DriveItemType = 1
+	DriveItemTypeFolder DriveItemType = 2
+)
+
 type DriveItem struct {
 	Name           string         `json:"name"`
 	SizeBytes      int64          `json:"size"`
 	File           FileItem       `json:"file"`
 	Folder         FolderItem     `json:"folder"`
 	FileSystemInfo FileSystemInfo `json:"fileSystemInfo"`
+	Type           DriveItemType
 }
 
 type ErrorResponse struct {
