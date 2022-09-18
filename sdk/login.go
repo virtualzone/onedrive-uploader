@@ -26,7 +26,10 @@ type SecretStore struct {
 
 func (client *Client) Login() error {
 	code := client.expectCode()
-	grant, _ := client.redeemCodeForAccessToken(code)
+	grant, err := client.redeemCodeForAccessToken(code)
+	if err != nil {
+		return err
+	}
 	if grant.AccessToken == "" {
 		return errors.New("received empty access token")
 	}
@@ -81,9 +84,12 @@ func (client *Client) redeemCodeForAccessToken(code string) (*LoginRedeemCodeRes
 	params["client_secret"] = client.Config.ClientSecret
 	params["code"] = code
 	params["grant_type"] = "authorization_code"
-	_, resp, err := client.httpPostForm("https://login.microsoftonline.com/common/oauth2/v2.0/token", params)
+	status, resp, err := client.httpPostForm("https://login.microsoftonline.com/common/oauth2/v2.0/token", params)
 	if err != nil {
 		return nil, err
+	}
+	if status != http.StatusOK {
+		return nil, client.handleResponseError(status, resp)
 	}
 	var json LoginRedeemCodeResponse
 	if err := UnmarshalJSON(&json, resp); err != nil {
@@ -106,9 +112,12 @@ func (client *Client) RenewAccessToken() (*LoginRedeemCodeResponse, error) {
 	params["client_secret"] = client.Config.ClientSecret
 	params["refresh_token"] = client.SecretStore.RefreshToken
 	params["grant_type"] = "refresh_token"
-	_, resp, err := client.httpPostForm("https://login.microsoftonline.com/common/oauth2/v2.0/token", params)
+	status, resp, err := client.httpPostForm("https://login.microsoftonline.com/common/oauth2/v2.0/token", params)
 	if err != nil {
 		return nil, err
+	}
+	if status != http.StatusOK {
+		return nil, client.handleResponseError(status, resp)
 	}
 	var json LoginRedeemCodeResponse
 	if err := UnmarshalJSON(&json, resp); err != nil {
