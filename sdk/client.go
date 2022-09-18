@@ -107,13 +107,12 @@ func (client *Client) httpSendJSON(method, uri string, o interface{}) (int, []by
 	return client.httpRequest(method, uri, requestHeaders, nil, payload)
 }
 
-func (client *Client) httpDelete(uri string) (int, error) {
+func (client *Client) httpDelete(uri string) (int, []byte, error) {
 	requestHeaders := make(HTTPRequestParams)
 	if client.SecretStore.AccessToken != "" {
 		requestHeaders["Authorization"] = "Bearer " + client.SecretStore.AccessToken
 	}
-	status, _, err := client.httpRequest("DELETE", uri, requestHeaders, nil, nil)
-	return status, err
+	return client.httpRequest("DELETE", uri, requestHeaders, nil, nil)
 }
 
 func (client *Client) httpGet(uri string, params HTTPRequestParams) (int, []byte, error) {
@@ -128,14 +127,9 @@ func (client *Client) httpPostJSON(uri string, o interface{}) (int, []byte, erro
 	return client.httpSendJSON("POST", uri, o)
 }
 
-func (client *Client) httpPutJSON(uri string, o interface{}) (int, []byte, error) {
-	return client.httpSendJSON("PUT", uri, o)
-}
-
 func (client *Client) httpRequest(method, uri string, requestHeaders, params HTTPRequestParams, payload []byte) (int, []byte, error) {
 	httpClient := &http.Client{}
 	uri = client.buildURI(uri, params)
-	//log.Println(method + " request for: " + uri)
 	reader := bytes.NewReader(payload)
 	req, err := http.NewRequest(method, uri, reader)
 	if err != nil {
@@ -153,6 +147,13 @@ func (client *Client) httpRequest(method, uri string, requestHeaders, params HTT
 	if err != nil {
 		return -1, nil, err
 	}
-	//log.Println(string(body))
 	return resp.StatusCode, body, nil
+}
+
+func (client *Client) handleResponseError(status int, data []byte) error {
+	var resp ErrorResponse
+	if err := UnmarshalJSON(&resp, data); err != nil {
+		return errors.New("received unexpected status code " + strconv.Itoa(status))
+	}
+	return errors.New("received unexpected status code " + strconv.Itoa(status) + ": " + resp.Error.Message + " (" + resp.Error.Code + ")")
 }

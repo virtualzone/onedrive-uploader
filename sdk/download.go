@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 )
 
@@ -38,7 +37,11 @@ func (client *Client) Download(sourceFilePath, targetFolder string) error {
 		return errors.New("file not found")
 	}
 	if resp.StatusCode != http.StatusOK {
-		return errors.New("received unexpected status code " + strconv.Itoa(resp.StatusCode))
+		data, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+		return client.handleResponseError(resp.StatusCode, data)
 	}
 	out, err := os.Create(targetFolder + fileName)
 	if err != nil {

@@ -3,7 +3,6 @@ package sdk
 import (
 	"errors"
 	"net/http"
-	"strconv"
 	"strings"
 )
 
@@ -33,7 +32,7 @@ func (client *Client) List(path string) ([]*DriveItem, error) {
 		return nil, errors.New("path not found")
 	}
 	if status != http.StatusOK {
-		return nil, errors.New("received unexpected status code " + strconv.Itoa(status))
+		return nil, client.handleResponseError(status, data)
 	}
 	var resp ListResponse
 	if err := UnmarshalJSON(&resp, data); err != nil {

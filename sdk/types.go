@@ -37,3 +37,12 @@ type DriveItem struct {
 	FileSystemInfo FileSystemInfo `json:"fileSystemInfo"`
 	Type           DriveItemType
 }
+
+type ErrorResponse struct {
+	Error ErrorType `json:"error"`
+}
+
+type ErrorType struct {
+	Code    string `json:"code"`
+	Message string `json:"message"`
+}

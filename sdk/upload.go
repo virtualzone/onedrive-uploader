@@ -6,7 +6,6 @@ import (
 	"mime"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -75,7 +74,7 @@ func (client *Client) uploadToSession(uploadUrl, mimeType, localFilePath string,
 			return err
 		}
 		if !IsHTTPStatusOK(status) {
-			return errors.New("received unexpected status code " + strconv.Itoa(status))
+			return client.handleResponseError(status, data)
 		}
 		offset += int64(n)
 	}
@@ -91,7 +90,7 @@ func (client *Client) startUploadSession(fileName, targetFolder string) (*Upload
 		return nil, err
 	}
 	if !IsHTTPStatusOK(status) {
-		return nil, errors.New("received unexpected status code " + strconv.Itoa(status))
+		return nil, client.handleResponseError(status, data)
 	}
 	var uploadSession UploadSessionResponse
 	if err := UnmarshalJSON(&uploadSession, data); err != nil {
@@ -112,7 +111,7 @@ func (client *Client) uploadSimple(fileName, mimeType, targetFolder, localFilePa
 		return err
 	}
 	if !IsHTTPStatusOK(status) {
-		return errors.New("received unexpected status code " + strconv.Itoa(status))
+		return client.handleResponseError(status, data)
 	}
 	return nil
 }
