@@ -29,3 +29,12 @@ type DriveItem struct {
 	Folder         FolderItem     `json:"folder"`
 	FileSystemInfo FileSystemInfo `json:"fileSystemInfo"`
 }
+
+type ErrorResponse struct {
+	Error ErrorType `json:"error"`
+}
+
+type ErrorType struct {
+	Code    string `json:"code"`
+	Message string `json:"message"`
+}

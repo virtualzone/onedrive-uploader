@@ -1,9 +1,7 @@
 package sdk
 
 import (
-	"errors"
 	"net/http"
-	"strconv"
 	"strings"
 )
 
@@ -35,7 +33,7 @@ func (client *Client) CreateDir(path string) error {
 	if parentPath == "/" {
 		url = GraphURL + "me" + client.Config.Root + "/children"
 	}
-	status, _, err := client.httpPostJSON(url, req)
+	status, data, err := client.httpPostJSON(url, req)
 	if err != nil {
 		return err
 	}
@@ -44,7 +42,7 @@ func (client *Client) CreateDir(path string) error {
 		return nil
 	}
 	if status != http.StatusCreated {
-		return errors.New("received unexpected status code " + strconv.Itoa(status))
+		return client.handleResponseError(status, data)
 	}
 	return nil
 }
