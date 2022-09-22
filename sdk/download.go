@@ -10,6 +10,9 @@ import (
 )
 
 func (client *Client) Download(sourceFilePath, targetFolder string) error {
+	if len(sourceFilePath) > 0 && sourceFilePath[0] == '.' {
+		return errors.New("invalid source path (should start with /)")
+	}
 	fileName := filepath.Base(sourceFilePath)
 	if fileName == "" || fileName == "." || fileName == ".." {
 		return errors.New("please specify a file, not a directory")

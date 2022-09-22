@@ -1,6 +1,7 @@
 package sdk
 
 import (
+	"errors"
 	"net/http"
 	"strings"
 )
@@ -15,6 +16,9 @@ type CreateFolderRequest struct {
 }
 
 func (client *Client) CreateDir(path string) error {
+	if len(path) > 0 && path[0] == '.' {
+		return errors.New("invalid path (should start with /)")
+	}
 	path = strings.TrimPrefix(strings.TrimSuffix(path, "/"), "/")
 	pathParts := strings.Split(path, "/")
 	newFolder := pathParts[len(pathParts)-1]

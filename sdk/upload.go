@@ -24,6 +24,9 @@ type UploadSessionResponse struct {
 type EmptyStruct struct{}
 
 func (client *Client) Upload(localFilePath, targetFolder string) error {
+	if len(targetFolder) > 0 && targetFolder[0] == '.' {
+		return errors.New("invalid target path (should start with /)")
+	}
 	fileName := filepath.Base(localFilePath)
 	if fileName == "" || fileName == "." || fileName == ".." {
 		return errors.New("please specify a file, not a directory")
