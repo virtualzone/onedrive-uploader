@@ -7,6 +7,9 @@ import (
 )
 
 func (client *Client) Delete(path string) error {
+	if len(path) > 0 && path[0] == '.' {
+		return errors.New("invalid path (should start with /)")
+	}
 	path = strings.TrimSuffix(path, "/")
 	if !strings.HasPrefix(path, "/") {
 		path = "/" + path

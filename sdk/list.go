@@ -12,6 +12,9 @@ type ListResponse struct {
 }
 
 func (client *Client) List(path string) ([]*DriveItem, error) {
+	if len(path) > 0 && path[0] == '.' {
+		return nil, errors.New("invalid path (should start with /)")
+	}
 	path = strings.TrimSuffix(path, "/")
 	if !strings.HasPrefix(path, "/") {
 		path = "/" + path
