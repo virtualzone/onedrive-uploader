@@ -24,8 +24,8 @@ func (client *Client) List(path string) ([]*DriveItem, error) {
 		url = GraphURL + "me" + client.Config.Root + "/children"
 	}
 	params := map[string]string{
-		"$top":     "100000",
-		"$orderby": "name",
+		"top":     "100000",
+		"orderby": "name",
 	}
 	status, data, err := client.httpGet(url, params)
 	if err != nil {
