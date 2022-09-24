@@ -19,6 +19,7 @@ var (
 type Client struct {
 	Config      *Config
 	SecretStore *SecretStore
+	Verbose     bool
 }
 
 type HTTPRequestParams map[string]string
@@ -27,6 +28,7 @@ func CreateClient(conf *Config) *Client {
 	client := &Client{
 		Config:      conf,
 		SecretStore: &SecretStore{},
+		Verbose:     false,
 	}
 	return client
 }
@@ -43,6 +45,12 @@ func UnmarshalJSON(o interface{}, body []byte) error {
 
 func IsHTTPStatusOK(status int) bool {
 	return (200 <= status && status <= 299)
+}
+
+func (client *Client) logVerbose(s string) {
+	if client.Verbose {
+		fmt.Println(s)
+	}
 }
 
 func (client *Client) buildURIParams(params HTTPRequestParams) string {
@@ -131,6 +139,7 @@ func (client *Client) httpRequest(method, uri string, requestHeaders, params HTT
 	httpClient := &http.Client{}
 	uri = client.buildURI(uri, params)
 	reader := bytes.NewReader(payload)
+	client.logVerbose(method + " " + uri)
 	req, err := http.NewRequest(method, uri, reader)
 	if err != nil {
 		return -1, nil, err

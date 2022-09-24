@@ -91,6 +91,7 @@ func main() {
 			return
 		}
 		client = sdk.CreateClient(conf)
+		client.Verbose = AppFlags.Verbose
 		if cmdDef.InitSecretStore {
 			logVerbose("Reading secret store...")
 			if err := client.ReadSecretStore(); err != nil {
