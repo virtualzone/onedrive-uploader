@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -16,19 +17,29 @@ var (
 	GraphURL = "https://graph.microsoft.com/v1.0/"
 )
 
+type transferProgress func(int64)
+
 type Client struct {
-	Config      *Config
-	SecretStore *SecretStore
-	Verbose     bool
+	Config                  *Config
+	SecretStore             *SecretStore
+	Verbose                 bool
+	UseTransferSignals      bool
+	ChannelTransferStart    chan fs.FileInfo
+	ChannelTransferProgress chan int64
+	ChannelTransferFinish   chan bool
 }
 
 type HTTPRequestParams map[string]string
 
 func CreateClient(conf *Config) *Client {
 	client := &Client{
-		Config:      conf,
-		SecretStore: &SecretStore{},
-		Verbose:     false,
+		Config:                  conf,
+		SecretStore:             &SecretStore{},
+		Verbose:                 false,
+		UseTransferSignals:      false,
+		ChannelTransferStart:    make(chan fs.FileInfo),
+		ChannelTransferProgress: make(chan int64),
+		ChannelTransferFinish:   make(chan bool),
 	}
 	return client
 }
@@ -45,12 +56,6 @@ func UnmarshalJSON(o interface{}, body []byte) error {
 
 func IsHTTPStatusOK(status int) bool {
 	return (200 <= status && status <= 299)
-}
-
-func (client *Client) logVerbose(s string) {
-	if client.Verbose {
-		fmt.Println(s)
-	}
 }
 
 func (client *Client) buildURIParams(params HTTPRequestParams) string {
@@ -79,19 +84,19 @@ func (client *Client) httpPostForm(uri string, params HTTPRequestParams) (int, [
 	requestHeaders := make(HTTPRequestParams)
 	requestHeaders["Content-Type"] = "application/x-www-form-urlencoded"
 	payload := []byte(client.buildURIParams(params))
-	return client.httpRequest("POST", uri, requestHeaders, nil, payload)
+	return client.httpRequest("POST", uri, requestHeaders, nil, payload, nil)
 }
 
-func (client *Client) httpSendFile(method, uri, mimeType string, data []byte) (int, []byte, error) {
+func (client *Client) httpSendFile(method, uri, mimeType string, data []byte, progress transferProgress) (int, []byte, error) {
 	requestHeaders := make(HTTPRequestParams)
 	requestHeaders["Content-Type"] = mimeType
 	if client.SecretStore.AccessToken != "" {
 		requestHeaders["Authorization"] = "Bearer " + client.SecretStore.AccessToken
 	}
-	return client.httpRequest(method, uri, requestHeaders, nil, data)
+	return client.httpRequest(method, uri, requestHeaders, nil, data, progress)
 }
 
-func (client *Client) httpSendFilePart(method, uri, mimeType string, offset, n, fileSize int64, data []byte) (int, []byte, error) {
+func (client *Client) httpSendFilePart(method, uri, mimeType string, offset, n, fileSize int64, data []byte, progress transferProgress) (int, []byte, error) {
 	requestHeaders := make(HTTPRequestParams)
 	requestHeaders["Content-Type"] = mimeType
 	requestHeaders["Content-Length"] = strconv.FormatInt(n, 10)
@@ -99,7 +104,7 @@ func (client *Client) httpSendFilePart(method, uri, mimeType string, offset, n, 
 	if client.SecretStore.AccessToken != "" {
 		requestHeaders["Authorization"] = "Bearer " + client.SecretStore.AccessToken
 	}
-	return client.httpRequest(method, uri, requestHeaders, nil, data)
+	return client.httpRequest(method, uri, requestHeaders, nil, data, progress)
 }
 
 func (client *Client) httpSendJSON(method, uri string, o interface{}) (int, []byte, error) {
@@ -112,7 +117,7 @@ func (client *Client) httpSendJSON(method, uri string, o interface{}) (int, []by
 	if client.SecretStore.AccessToken != "" {
 		requestHeaders["Authorization"] = "Bearer " + client.SecretStore.AccessToken
 	}
-	return client.httpRequest(method, uri, requestHeaders, nil, payload)
+	return client.httpRequest(method, uri, requestHeaders, nil, payload, nil)
 }
 
 func (client *Client) httpDelete(uri string) (int, []byte, error) {
@@ -120,7 +125,7 @@ func (client *Client) httpDelete(uri string) (int, []byte, error) {
 	if client.SecretStore.AccessToken != "" {
 		requestHeaders["Authorization"] = "Bearer " + client.SecretStore.AccessToken
 	}
-	return client.httpRequest("DELETE", uri, requestHeaders, nil, nil)
+	return client.httpRequest("DELETE", uri, requestHeaders, nil, nil, nil)
 }
 
 func (client *Client) httpGet(uri string, params HTTPRequestParams) (int, []byte, error) {
@@ -128,19 +133,28 @@ func (client *Client) httpGet(uri string, params HTTPRequestParams) (int, []byte
 	if client.SecretStore.AccessToken != "" {
 		requestHeaders["Authorization"] = "Bearer " + client.SecretStore.AccessToken
 	}
-	return client.httpRequest("GET", uri, requestHeaders, params, nil)
+	return client.httpRequest("GET", uri, requestHeaders, params, nil, nil)
 }
 
 func (client *Client) httpPostJSON(uri string, o interface{}) (int, []byte, error) {
 	return client.httpSendJSON("POST", uri, o)
 }
 
-func (client *Client) httpRequest(method, uri string, requestHeaders, params HTTPRequestParams, payload []byte) (int, []byte, error) {
+func (client *Client) httpRequest(method, uri string, requestHeaders, params HTTPRequestParams, payload []byte, progress transferProgress) (int, []byte, error) {
 	httpClient := &http.Client{}
 	uri = client.buildURI(uri, params)
-	reader := bytes.NewReader(payload)
-	client.logVerbose(method + " " + uri)
+	total := int64(0)
+	reader := &ProgressReader{
+		Reader: bytes.NewReader(payload),
+		OnReadProgress: func(r int64) {
+			total += r
+			if progress != nil {
+				progress(total)
+			}
+		},
+	}
 	req, err := http.NewRequest(method, uri, reader)
+	req.ContentLength = int64(reader.Len())
 	if err != nil {
 		return -1, nil, err
 	}
@@ -165,4 +179,25 @@ func (client *Client) handleResponseError(status int, data []byte) error {
 		return errors.New("received unexpected status code " + strconv.Itoa(status))
 	}
 	return errors.New("received unexpected status code " + strconv.Itoa(status) + ": " + resp.Error.Message + " (" + resp.Error.Code + ")")
+}
+
+func (client *Client) signalTransferStart(info fs.FileInfo) {
+	if !client.UseTransferSignals {
+		return
+	}
+	client.ChannelTransferStart <- info
+}
+
+func (client *Client) signalTransferProgress(b int64) {
+	if !client.UseTransferSignals {
+		return
+	}
+	client.ChannelTransferProgress <- b
+}
+
+func (client *Client) signalTransferFinish() {
+	if !client.UseTransferSignals {
+		return
+	}
+	client.ChannelTransferFinish <- true
 }

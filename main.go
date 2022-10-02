@@ -83,6 +83,9 @@ func main() {
 		printHelp()
 		return
 	}
+	outputRenderer := &OutputRenderer{
+		Quiet: AppFlags.Quiet,
+	}
 	var client *sdk.Client = nil
 	if cmdDef.RequireConfig {
 		conf, err := sdk.ReadConfig(AppFlags.ConfigPath)
@@ -91,6 +94,7 @@ func main() {
 			return
 		}
 		client = sdk.CreateClient(conf)
+		client.UseTransferSignals = true
 		client.Verbose = AppFlags.Verbose
 		if cmdDef.InitSecretStore {
 			logVerbose("Reading secret store...")
@@ -100,12 +104,15 @@ func main() {
 			}
 			if client.ShouldRenewAccessToken() {
 				logVerbose("Renewing access token...")
+				outputRenderer.initSpinner("Renewing access token...")
 				if _, err := client.RenewAccessToken(); err != nil {
+					outputRenderer.stopSpinner()
 					logError("Could not renew access token: " + err.Error())
 					return
 				}
+				outputRenderer.stopSpinner()
 			}
 		}
 	}
-	cmdDef.Fn(client, args)
+	cmdDef.Fn(client, outputRenderer, args)
 }

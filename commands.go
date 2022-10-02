@@ -1,12 +1,14 @@
 package main
 
 import (
+	"io/fs"
 	"strconv"
+	"time"
 
 	"github.com/virtualzone/onedrive-uploader/sdk"
 )
 
-type CommandFunction func(client *sdk.Client, args []string)
+type CommandFunction func(client *sdk.Client, renderer *OutputRenderer, args []string)
 
 type CommandFunctionDefinition struct {
 	Fn              CommandFunction
@@ -30,53 +32,103 @@ var (
 	}
 )
 
-func cmdLogin(client *sdk.Client, args []string) {
+func cmdLogin(client *sdk.Client, renderer *OutputRenderer, args []string) {
 	log("------------------------------------")
 	log("Open a browser and go to:")
 	print(client.GetLoginURL())
 	log("------------------------------------")
-	log("Waiting for code...")
-	if err := client.Login(); err != nil {
+	renderer.initSpinner("Waiting for code...")
+	err := client.Login()
+	renderer.stopSpinner()
+	if err != nil {
 		logError("Could not log in: " + err.Error())
 		return
 	}
 	log("Login successful.")
 }
 
-func cmdCreateDir(client *sdk.Client, args []string) {
-	if err := client.CreateDir(args[0]); err != nil {
+func cmdCreateDir(client *sdk.Client, renderer *OutputRenderer, args []string) {
+	renderer.initSpinner("Creating directory...")
+	err := client.CreateDir(args[0])
+	renderer.stopSpinner()
+	if err != nil {
 		logError("Could not create folder: " + err.Error())
 		return
 	}
 	log("Folder created.")
 }
 
-func cmdUpload(client *sdk.Client, args []string) {
-	if err := client.Upload(args[0], args[1]); err != nil {
+func cmdUpload(client *sdk.Client, renderer *OutputRenderer, args []string) {
+	done := false
+	go func() {
+		fileStat := <-client.ChannelTransferStart
+		renderer.initProgressBar(fileStat.Size(), "Uploading "+fileStat.Name()+"...")
+	}()
+	go func() {
+		for !done {
+			bytes := <-client.ChannelTransferProgress
+			renderer.updateProgressBar(bytes)
+			time.Sleep(50 * time.Millisecond)
+		}
+	}()
+	go func() {
+		done = <-client.ChannelTransferFinish
+	}()
+	err := client.Upload(args[0], args[1])
+	if err != nil {
 		logError("Could not upload file: " + err.Error())
 		return
 	}
 	log("File uploaded.")
 }
 
-func cmdDownload(client *sdk.Client, args []string) {
-	if err := client.Download(args[0], args[1]); err != nil {
+func cmdDownload(client *sdk.Client, renderer *OutputRenderer, args []string) {
+	done := false
+	go func() {
+		var fileStat fs.FileInfo = nil
+		for fileStat == nil {
+			fileStat := <-client.ChannelTransferStart
+			if fileStat == nil {
+				renderer.initSpinner("Retrieving information...")
+			} else {
+				renderer.stopSpinner()
+				renderer.initProgressBar(fileStat.Size(), "Downloading "+fileStat.Name()+"...")
+			}
+		}
+	}()
+	go func() {
+		for !done {
+			bytes := <-client.ChannelTransferProgress
+			renderer.updateProgressBar(bytes)
+			time.Sleep(50 * time.Millisecond)
+		}
+	}()
+	go func() {
+		done = <-client.ChannelTransferFinish
+	}()
+	err := client.Download(args[0], args[1])
+	if err != nil {
 		logError("Could not download file: " + err.Error())
 		return
 	}
 	log("File downloaded.")
 }
 
-func cmdDelete(client *sdk.Client, args []string) {
-	if err := client.Delete(args[0]); err != nil {
+func cmdDelete(client *sdk.Client, renderer *OutputRenderer, args []string) {
+	renderer.initSpinner("Deleting...")
+	err := client.Delete(args[0])
+	renderer.stopSpinner()
+	if err != nil {
 		logError("Could not delete: " + err.Error())
 		return
 	}
 	log("Deleted.")
 }
 
-func cmdList(client *sdk.Client, args []string) {
+func cmdList(client *sdk.Client, renderer *OutputRenderer, args []string) {
+	renderer.initSpinner("Retrieving directory listing...")
 	list, err := client.List(args[0])
+	renderer.stopSpinner()
 	if err != nil {
 		logError("Could not list: " + err.Error())
 		return
@@ -90,8 +142,10 @@ func cmdList(client *sdk.Client, args []string) {
 	}
 }
 
-func cmdInfo(client *sdk.Client, args []string) {
+func cmdInfo(client *sdk.Client, renderer *OutputRenderer, args []string) {
+	renderer.initSpinner("Retrieving information...")
 	item, err := client.Info(args[0])
+	renderer.stopSpinner()
 	if err != nil {
 		logError("Could not get info: " + err.Error())
 		return
@@ -112,8 +166,10 @@ func cmdInfo(client *sdk.Client, args []string) {
 	}
 }
 
-func cmdSHA1(client *sdk.Client, args []string) {
+func cmdSHA1(client *sdk.Client, renderer *OutputRenderer, args []string) {
+	renderer.initSpinner("Retrieving SHA1 hash...")
 	item, err := client.Info(args[0])
+	renderer.stopSpinner()
 	if err != nil {
 		logError("Could not get info: " + err.Error())
 		return
@@ -121,8 +177,10 @@ func cmdSHA1(client *sdk.Client, args []string) {
 	print(item.File.Hashes.SHA1)
 }
 
-func cmdSHA256(client *sdk.Client, args []string) {
+func cmdSHA256(client *sdk.Client, renderer *OutputRenderer, args []string) {
+	renderer.initSpinner("Retrieving SHA256 hash...")
 	item, err := client.Info(args[0])
+	renderer.stopSpinner()
 	if err != nil {
 		logError("Could not get info: " + err.Error())
 		return
@@ -130,6 +188,6 @@ func cmdSHA256(client *sdk.Client, args []string) {
 	print(item.File.Hashes.SHA256)
 }
 
-func cmdVersion(client *sdk.Client, args []string) {
+func cmdVersion(client *sdk.Client, renderer *OutputRenderer, args []string) {
 	print(AppVersion)
 }

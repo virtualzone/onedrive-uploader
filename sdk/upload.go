@@ -46,16 +46,21 @@ func (client *Client) Upload(localFilePath, targetFolder string) error {
 	if mimeType == "" {
 		mimeType = "application/octet-stream"
 	}
+	client.signalTransferStart(fileStat)
 	if fileStat.Size() < int64(UploadSessionFileSizeLimit) {
 		// Use simple upload
-		return client.uploadSimple(fileName, mimeType, targetFolder, localFilePath)
+		res := client.uploadSimple(fileName, mimeType, targetFolder, localFilePath)
+		client.signalTransferFinish()
+		return res
 	}
 	// Use upload session
 	session, err := client.startUploadSession(fileName, targetFolder)
 	if err != nil {
 		return err
 	}
-	return client.uploadToSession(session.UploadURL, mimeType, localFilePath, fileStat.Size())
+	res := client.uploadToSession(session.UploadURL, mimeType, localFilePath, fileStat.Size())
+	client.signalTransferFinish()
+	return res
 }
 
 func (client *Client) uploadToSession(uploadUrl, mimeType, localFilePath string, fileSize int64) error {
@@ -72,7 +77,10 @@ func (client *Client) uploadToSession(uploadUrl, mimeType, localFilePath string,
 		if n < UploadSessionRangeSize {
 			data = append([]byte(nil), data[:n]...)
 		}
-		status, _, err := client.httpSendFilePart("PUT", uploadUrl, mimeType, offset, int64(n), fileSize, data)
+		progress := func(b int64) {
+			client.signalTransferProgress(b + offset)
+		}
+		status, _, err := client.httpSendFilePart("PUT", uploadUrl, mimeType, offset, int64(n), fileSize, data, progress)
 		if err != nil {
 			return err
 		}
@@ -85,7 +93,6 @@ func (client *Client) uploadToSession(uploadUrl, mimeType, localFilePath string,
 }
 
 func (client *Client) startUploadSession(fileName, targetFolder string) (*UploadSessionResponse, error) {
-	//log.Printf("Creating upload session for '%s' to '%s'...\n", fileName, targetFolder)
 	url := GraphURL + "me" + client.Config.Root + ":" + targetFolder + fileName + ":/createUploadSession"
 	payload := &EmptyStruct{}
 	status, data, err := client.httpPostJSON(url, payload)
@@ -107,9 +114,11 @@ func (client *Client) uploadSimple(fileName, mimeType, targetFolder, localFilePa
 	if err != nil {
 		return err
 	}
-	//log.Printf("Uploading '%s' (%s) to '%s'...\n", fileName, mimeType, targetFolder)
 	url := GraphURL + "me" + client.Config.Root + ":" + targetFolder + fileName + ":/content"
-	status, _, err := client.httpSendFile("PUT", url, mimeType, data)
+	progress := func(b int64) {
+		client.signalTransferProgress(b)
+	}
+	status, _, err := client.httpSendFile("PUT", url, mimeType, data, progress)
 	if err != nil {
 		return err
 	}

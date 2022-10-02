@@ -3,11 +3,42 @@ package sdk
 import (
 	"errors"
 	"io"
+	"io/fs"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
+
+type DownloadFileStat struct {
+	FileName  string
+	SizeBytes int64
+}
+
+func (s *DownloadFileStat) Name() string {
+	return s.FileName
+}
+
+func (s *DownloadFileStat) Size() int64 {
+	return s.SizeBytes
+}
+
+func (s *DownloadFileStat) Mode() fs.FileMode {
+	return 0
+}
+
+func (s *DownloadFileStat) ModTime() time.Time {
+	return time.Now()
+}
+
+func (s *DownloadFileStat) IsDir() bool {
+	return false
+}
+
+func (s *DownloadFileStat) Sys() any {
+	return nil
+}
 
 func (client *Client) Download(sourceFilePath, targetFolder string) error {
 	if len(sourceFilePath) > 0 && sourceFilePath[0] == '.' {
@@ -24,6 +55,13 @@ func (client *Client) Download(sourceFilePath, targetFolder string) error {
 	if !strings.HasSuffix(targetFolder, "/") {
 		targetFolder += "/"
 	}
+	// Get file info
+	client.signalTransferStart(nil)
+	info, err := client.Info(sourceFilePath)
+	if err != nil {
+		return err
+	}
+	// Start download
 	url := GraphURL + "me" + client.Config.Root + ":" + sourceFilePath + ":/content"
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -46,12 +84,27 @@ func (client *Client) Download(sourceFilePath, targetFolder string) error {
 		}
 		return client.handleResponseError(resp.StatusCode, data)
 	}
+	fileStat := &DownloadFileStat{
+		FileName:  info.Name,
+		SizeBytes: info.SizeBytes,
+	}
+	client.signalTransferStart(fileStat)
 	out, err := os.Create(targetFolder + fileName)
 	if err != nil {
+		client.signalTransferFinish()
 		return err
 	}
 	defer out.Close()
-	_, err = io.Copy(out, resp.Body)
+	total := int64(0)
+	reader := &ProgressReader{
+		Reader: resp.Body,
+		OnReadProgress: func(r int64) {
+			total += r
+			client.signalTransferProgress(total)
+		},
+	}
+	_, err = io.Copy(out, reader)
+	client.signalTransferFinish()
 	if err != nil {
 		return err
 	}
