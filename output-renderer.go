@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"time"
 
@@ -23,10 +24,9 @@ func (r *OutputRenderer) initProgressBar(maxBytes int64, desc string) {
 		progressbar.OptionShowBytes(true),
 		progressbar.OptionSetWidth(20),
 		progressbar.OptionShowCount(),
-		progressbar.OptionOnCompletion(func() {}),
+		progressbar.OptionOnCompletion(func() { fmt.Printf("\n") }),
 		progressbar.OptionSpinnerType(14),
 		progressbar.OptionSetRenderBlankState(true),
-		progressbar.OptionClearOnFinish(),
 	)
 }
 

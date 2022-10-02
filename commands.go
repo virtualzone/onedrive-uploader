@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"io/fs"
+	"os"
 	"strconv"
 	"time"
 
@@ -59,27 +61,46 @@ func cmdCreateDir(client *sdk.Client, renderer *OutputRenderer, args []string) {
 }
 
 func cmdUpload(client *sdk.Client, renderer *OutputRenderer, args []string) {
-	done := false
-	go func() {
-		fileStat := <-client.ChannelTransferStart
-		renderer.initProgressBar(fileStat.Size(), "Uploading "+fileStat.Name()+"...")
-	}()
-	go func() {
-		for !done {
-			bytes := <-client.ChannelTransferProgress
-			renderer.updateProgressBar(bytes)
-			time.Sleep(50 * time.Millisecond)
+	targetFolder := args[len(args)-1]
+	sourceFiles := args[:len(args)-1]
+	numFiles := 0
+	for _, sourceFile := range sourceFiles {
+		fileStat, err := os.Stat(sourceFile)
+		if err != nil {
+			logError("Could not get stats for local file: " + err.Error())
+			return
 		}
-	}()
-	go func() {
-		done = <-client.ChannelTransferFinish
-	}()
-	err := client.Upload(args[0], args[1])
-	if err != nil {
-		logError("Could not upload file: " + err.Error())
-		return
+		// Skip directories
+		if fileStat.IsDir() {
+			continue
+		}
+		// Upload file
+		numFiles++
+		client.ResetChannels()
+		done := false
+		go func() {
+			fileStat := <-client.ChannelTransferStart
+			renderer.initProgressBar(fileStat.Size(), "Uploading "+fmt.Sprintf("%-20s", cutString(fileStat.Name(), 17)+"..."))
+		}()
+		go func() {
+			for !done {
+				bytes := <-client.ChannelTransferProgress
+				renderer.updateProgressBar(bytes)
+				time.Sleep(50 * time.Millisecond)
+			}
+		}()
+		go func() {
+			done = <-client.ChannelTransferFinish
+		}()
+		err = client.Upload(sourceFile, targetFolder)
+		if err != nil {
+			logError("Could not upload file: " + err.Error())
+			return
+		}
 	}
-	log("File uploaded.")
+	if numFiles == 0 {
+		logError("No files for uploading specified (uploading directories is not supported)")
+	}
 }
 
 func cmdDownload(client *sdk.Client, renderer *OutputRenderer, args []string) {
@@ -190,4 +211,11 @@ func cmdSHA256(client *sdk.Client, renderer *OutputRenderer, args []string) {
 
 func cmdVersion(client *sdk.Client, renderer *OutputRenderer, args []string) {
 	print(AppVersion)
+}
+
+func cutString(s string, maxLen int) string {
+	if len(s) <= maxLen {
+		return s
+	}
+	return s[:maxLen]
 }

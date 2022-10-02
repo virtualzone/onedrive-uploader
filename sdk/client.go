@@ -33,17 +33,14 @@ type HTTPRequestParams map[string]string
 
 func CreateClient(conf *Config) *Client {
 	client := &Client{
-		Config:                  conf,
-		SecretStore:             &SecretStore{},
-		Verbose:                 false,
-		UseTransferSignals:      false,
-		ChannelTransferStart:    make(chan fs.FileInfo),
-		ChannelTransferProgress: make(chan int64),
-		ChannelTransferFinish:   make(chan bool),
+		Config:             conf,
+		SecretStore:        &SecretStore{},
+		Verbose:            false,
+		UseTransferSignals: false,
 	}
+	client.ResetChannels()
 	return client
 }
-
 func UnmarshalJSON(o interface{}, body []byte) error {
 	if body == nil {
 		return errors.New("body is NIL")
@@ -56,6 +53,21 @@ func UnmarshalJSON(o interface{}, body []byte) error {
 
 func IsHTTPStatusOK(status int) bool {
 	return (200 <= status && status <= 299)
+}
+
+func (client *Client) ResetChannels() {
+	if client.ChannelTransferStart != nil {
+		close(client.ChannelTransferStart)
+	}
+	if client.ChannelTransferProgress != nil {
+		close(client.ChannelTransferProgress)
+	}
+	if client.ChannelTransferFinish != nil {
+		close(client.ChannelTransferFinish)
+	}
+	client.ChannelTransferStart = make(chan fs.FileInfo)
+	client.ChannelTransferProgress = make(chan int64)
+	client.ChannelTransferFinish = make(chan bool)
 }
 
 func (client *Client) buildURIParams(params HTTPRequestParams) string {
