@@ -24,6 +24,20 @@ type SecretStore struct {
 	Expiry       time.Time `json:"expiry"`
 }
 
+const (
+	loginHTMLResponseHeader = "<!doctype html>" +
+		"<html>" +
+		"<head>" +
+		"<title>OneDrive Uploader</title>" +
+		"</head>" +
+		"<body>" +
+		"<h1>OneDrive Uploader</h1>"
+	loginHTMLResponseFooter = "</body></html>"
+	loginHTMLResponseOK     = "<p>Received authorization code from Microsoft Graph API.</p>" +
+		"<p>Please return to your terminal now.</p>"
+	loginHTMLResponseNotFound = "<p>Error: Page not found.</p>"
+)
+
 func (client *Client) Login() error {
 	code := client.expectCode()
 	grant, err := client.redeemCodeForAccessToken(code)
@@ -134,19 +148,35 @@ func (client *Client) expectCode() string {
 		ReadTimeout:  time.Second * 15,
 		IdleTimeout:  time.Second * 60,
 	}
+	ctx, cancel := context.WithCancel(context.Background())
+
 	code := ""
 	var handleCall = func(w http.ResponseWriter, r *http.Request) {
 		s := r.URL.Query().Get("code")
 		if s != "" {
+			html := loginHTMLResponseHeader + loginHTMLResponseOK + loginHTMLResponseFooter
+			w.Header().Set("Content-Type", "text/html")
 			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(html))
+			if f, ok := w.(http.Flusher); ok {
+				f.Flush()
+			}
 			code = s
-			httpServer.Shutdown(context.TODO())
+			cancel()
 		} else {
+			html := loginHTMLResponseHeader + loginHTMLResponseNotFound + loginHTMLResponseFooter
+			w.Header().Set("Content-Type", "text/html")
 			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte(html))
 		}
 	}
 	http.HandleFunc("/", handleCall)
-	httpServer.ListenAndServe()
+
+	go func() error {
+		return httpServer.ListenAndServe()
+	}()
+	<-ctx.Done()
+	httpServer.Shutdown(context.Background())
 
 	return code
 }
