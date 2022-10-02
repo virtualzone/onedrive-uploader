@@ -15,6 +15,8 @@ Command line (CLI) utility for uploading files to Microsoft OneDrive using the M
 * Supports "special folders" (such as App Folder / App Root)
 * Pre-compiled binaries on Linux, MacOS and Windows
 
+![](https://raw.githubusercontent.com/virtualzone/onedrive-uploader/main/res/progress.gif)
+
 ## Getting started
 
 ### 1. Create an Azure Application
