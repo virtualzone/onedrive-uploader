@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path"
 	"strings"
 
 	"github.com/virtualzone/onedrive-uploader/sdk"
@@ -35,7 +36,12 @@ func printHelp() {
 }
 
 func prepareFlags() {
-	flag.StringVar(&AppFlags.ConfigPath, "c", "./config.json", "path to config.json")
+	configPath := "./config.json"
+	wd, err := os.Getwd()
+	if err == nil {
+		configPath = path.Join(wd, "config.json")
+	}
+	flag.StringVar(&AppFlags.ConfigPath, "c", configPath, "path to config.json")
 	flag.BoolVar(&AppFlags.Quiet, "q", false, "output errors only")
 	flag.BoolVar(&AppFlags.Verbose, "v", false, "verbose output")
 	flag.Parse()
