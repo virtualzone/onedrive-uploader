@@ -81,7 +81,7 @@ func findConfigFilePath() (string, error) {
 		configPath = filepath.Join(configPath, "onedrive-uploader")
 		_, err := os.Stat(configPath)
 		if err != nil && os.IsNotExist(err) {
-			os.MkdirAll(configPath, os.FileMode(0600))
+			os.MkdirAll(configPath, os.FileMode(0700))
 		}
 	}
 	configPath = filepath.Join(configPath, "config.json")
