@@ -1,17 +1,23 @@
 package sdk
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"strings"
+	"time"
 )
 
 type Config struct {
-	ClientID     string   `json:"client_id"`
-	ClientSecret string   `json:"client_secret"`
-	Scopes       []string `json:"scopes"`
-	RedirectURL  string   `json:"redirect_uri"`
-	SecretStore  string   `json:"secret_store"`
-	Root         string   `json:"root"`
+	ConfigFilePath string    `json:"-"`
+	ClientID       string    `json:"client_id"`
+	ClientSecret   string    `json:"client_secret"`
+	Scopes         []string  `json:"scopes"`
+	RedirectURL    string    `json:"redirect_uri"`
+	Root           string    `json:"root"`
+	AccessToken    string    `json:"access_token"`
+	RefreshToken   string    `json:"refresh_token"`
+	Expiry         time.Time `json:"expiry"`
+	SecretStore    string    `json:"secret_store,omitempty"`
 }
 
 func ReadConfigData(data []byte) (*Config, error) {
@@ -31,5 +37,18 @@ func ReadConfig(filename string) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	return ReadConfigData(data)
+	config, err := ReadConfigData(data)
+	config.ConfigFilePath = filename
+	return config, err
+}
+
+func (config *Config) Write() error {
+	data, err := json.Marshal(config)
+	if err != nil {
+		return err
+	}
+	if err := ioutil.WriteFile(config.ConfigFilePath, data, 0600); err != nil {
+		return err
+	}
+	return nil
 }

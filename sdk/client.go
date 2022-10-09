@@ -21,7 +21,6 @@ type transferProgress func(int64)
 
 type Client struct {
 	Config                  *Config
-	SecretStore             *SecretStore
 	Verbose                 bool
 	UseTransferSignals      bool
 	ChannelTransferStart    chan fs.FileInfo
@@ -34,7 +33,6 @@ type HTTPRequestParams map[string]string
 func CreateClient(conf *Config) *Client {
 	client := &Client{
 		Config:             conf,
-		SecretStore:        &SecretStore{},
 		Verbose:            false,
 		UseTransferSignals: false,
 	}
@@ -102,8 +100,8 @@ func (client *Client) httpPostForm(uri string, params HTTPRequestParams) (int, [
 func (client *Client) httpSendFile(method, uri, mimeType string, data []byte, progress transferProgress) (int, []byte, error) {
 	requestHeaders := make(HTTPRequestParams)
 	requestHeaders["Content-Type"] = mimeType
-	if client.SecretStore.AccessToken != "" {
-		requestHeaders["Authorization"] = "Bearer " + client.SecretStore.AccessToken
+	if client.Config.AccessToken != "" {
+		requestHeaders["Authorization"] = "Bearer " + client.Config.AccessToken
 	}
 	return client.httpRequest(method, uri, requestHeaders, nil, data, progress)
 }
@@ -113,8 +111,8 @@ func (client *Client) httpSendFilePart(method, uri, mimeType string, offset, n, 
 	requestHeaders["Content-Type"] = mimeType
 	requestHeaders["Content-Length"] = strconv.FormatInt(n, 10)
 	requestHeaders["Content-Range"] = "bytes " + strconv.FormatInt(offset, 10) + "-" + strconv.FormatInt(n+offset-1, 10) + "/" + strconv.FormatInt(fileSize, 10)
-	if client.SecretStore.AccessToken != "" {
-		requestHeaders["Authorization"] = "Bearer " + client.SecretStore.AccessToken
+	if client.Config.AccessToken != "" {
+		requestHeaders["Authorization"] = "Bearer " + client.Config.AccessToken
 	}
 	return client.httpRequest(method, uri, requestHeaders, nil, data, progress)
 }
@@ -126,24 +124,24 @@ func (client *Client) httpSendJSON(method, uri string, o interface{}) (int, []by
 	}
 	requestHeaders := make(HTTPRequestParams)
 	requestHeaders["Content-Type"] = "application/json"
-	if client.SecretStore.AccessToken != "" {
-		requestHeaders["Authorization"] = "Bearer " + client.SecretStore.AccessToken
+	if client.Config.AccessToken != "" {
+		requestHeaders["Authorization"] = "Bearer " + client.Config.AccessToken
 	}
 	return client.httpRequest(method, uri, requestHeaders, nil, payload, nil)
 }
 
 func (client *Client) httpDelete(uri string) (int, []byte, error) {
 	requestHeaders := make(HTTPRequestParams)
-	if client.SecretStore.AccessToken != "" {
-		requestHeaders["Authorization"] = "Bearer " + client.SecretStore.AccessToken
+	if client.Config.AccessToken != "" {
+		requestHeaders["Authorization"] = "Bearer " + client.Config.AccessToken
 	}
 	return client.httpRequest("DELETE", uri, requestHeaders, nil, nil, nil)
 }
 
 func (client *Client) httpGet(uri string, params HTTPRequestParams) (int, []byte, error) {
 	requestHeaders := make(HTTPRequestParams)
-	if client.SecretStore.AccessToken != "" {
-		requestHeaders["Authorization"] = "Bearer " + client.SecretStore.AccessToken
+	if client.Config.AccessToken != "" {
+		requestHeaders["Authorization"] = "Bearer " + client.Config.AccessToken
 	}
 	return client.httpRequest("GET", uri, requestHeaders, params, nil, nil)
 }

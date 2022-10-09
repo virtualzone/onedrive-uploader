@@ -27,7 +27,6 @@ func (client *Client) CreateDir(path string) error {
 		parentPathParts := pathParts[:len(pathParts)-1]
 		parentPath = "/" + strings.Join(parentPathParts, "/")
 	}
-	//log.Printf("Creating folder '%s' in parent path '%s'...\n", newFolder, parentPath)
 	req := &CreateFolderRequest{
 		Name:             newFolder,
 		Folder:           FolderProperties{},

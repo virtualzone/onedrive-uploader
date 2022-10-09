@@ -27,11 +27,6 @@ func TestMain(m *testing.M) {
 		}
 		IntegrationConfig = c
 		client := CreateClient(c)
-		if err := client.ReadSecretStore(); err != nil {
-			fmt.Println("Could not read secret store: " + err.Error())
-			os.Exit(-1)
-			return
-		}
 		if client.ShouldRenewAccessToken() {
 			if _, err := client.RenewAccessToken(); err != nil {
 				fmt.Println("Could not renew access token: " + err.Error())

@@ -23,12 +23,6 @@ jobs:
       with:
         name: "config.json"
         json: ${{ secrets.CONFIG_JSON }}
-    - name: Create secret.json
-      id: create-json-secret
-      uses: jsdaniell/create-json@1.1.2
-      with:
-        name: "secret.json"
-        json: ${{ secrets.SECRET_JSON }}
     - name: Run tests on main
       run: go test -cover -v
       env:

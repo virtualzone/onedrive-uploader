@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/fs"
+	"io/ioutil"
 	"os"
 	"strconv"
 	"time"
@@ -21,6 +23,7 @@ type CommandFunctionDefinition struct {
 
 var (
 	commands = map[string]*CommandFunctionDefinition{
+		"config":   {Fn: cmdConfig, MinArgs: 0, InitSecretStore: false, RequireConfig: false},
 		"login":    {Fn: cmdLogin, MinArgs: 0, InitSecretStore: false, RequireConfig: true},
 		"mkdir":    {Fn: cmdCreateDir, MinArgs: 1, InitSecretStore: true, RequireConfig: true},
 		"upload":   {Fn: cmdUpload, MinArgs: 2, InitSecretStore: true, RequireConfig: true},
@@ -30,9 +33,74 @@ var (
 		"info":     {Fn: cmdInfo, MinArgs: 1, InitSecretStore: true, RequireConfig: true},
 		"sha1":     {Fn: cmdSHA1, MinArgs: 1, InitSecretStore: true, RequireConfig: true},
 		"sha256":   {Fn: cmdSHA256, MinArgs: 1, InitSecretStore: true, RequireConfig: true},
+		"migrate":  {Fn: cmdMigrateConfig, MinArgs: 1, InitSecretStore: false, RequireConfig: false},
 		"version":  {Fn: cmdVersion, MinArgs: 0, InitSecretStore: false, RequireConfig: false},
 	}
 )
+
+func cmdConfig(client *sdk.Client, renderer *OutputRenderer, args []string) {
+	targetPath, err := findConfigFilePath()
+	if err != nil {
+		logError("Could not init config path: " + err.Error())
+		return
+	}
+	interactiveConfig := &InteractiveConfig{
+		TargetPath: targetPath,
+	}
+	interactiveConfig.Run()
+}
+
+func cmdMigrateConfig(client *sdk.Client, renderer *OutputRenderer, args []string) {
+	type secretStore struct {
+		AccessToken  string    `json:"access_token"`
+		RefreshToken string    `json:"refresh_token"`
+		Expiry       time.Time `json:"expiry"`
+	}
+
+	readSecretJson := func(filename string) (*secretStore, error) {
+		data, err := ioutil.ReadFile(filename)
+		if err != nil {
+			return nil, err
+		}
+		var config secretStore
+		if err := json.Unmarshal(data, &config); err != nil {
+			return nil, err
+		}
+		return &config, nil
+	}
+
+	sourceConfig, err := sdk.ReadConfig(args[0])
+	if err != nil {
+		logError("Could not read source config: " + err.Error())
+		return
+	}
+	sourceSecret, err := readSecretJson(sourceConfig.SecretStore)
+	if err != nil {
+		logError("Could not read source secret: " + err.Error())
+		return
+	}
+	targetPath, err := findConfigFilePath()
+	if err != nil {
+		logError("Could not init target config: " + err.Error())
+		return
+	}
+	targetConfig := &sdk.Config{
+		ConfigFilePath: targetPath,
+		ClientID:       sourceConfig.ClientID,
+		ClientSecret:   sourceConfig.ClientSecret,
+		Scopes:         sourceConfig.Scopes,
+		RedirectURL:    sourceConfig.RedirectURL,
+		Root:           sourceConfig.Root,
+		AccessToken:    sourceSecret.AccessToken,
+		RefreshToken:   sourceSecret.RefreshToken,
+		Expiry:         sourceSecret.Expiry,
+	}
+	if err := targetConfig.Write(); err != nil {
+		logError("Could not write target config: " + err.Error())
+		return
+	}
+	log("Configuration migrated.")
+}
 
 func cmdLogin(client *sdk.Client, renderer *OutputRenderer, args []string) {
 	log("------------------------------------")

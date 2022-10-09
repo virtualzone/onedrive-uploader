@@ -44,59 +44,26 @@ cd onedrive-uploader
 make
 ```
 
-### 3. Create a configuration file
-In the binary's folder, create a configuration file named ```config.json```.
-
-Example ```config.json``` for an App with access to a user's entire OneDrive:
+### 3. Configuration & Login 
+Run the following command to create the configuration file:
 ```
-{
-    "client_id": "019ccb8b-118f-4559-ad2c-2ccda5b9def6",
-    "client_secret": "some-client-secret",
-    "scopes": [
-        "Files.Read",
-        "Files.ReadWrite",
-        "Files.Read.All",
-        "Files.ReadWrite.All",
-        "offline_access"
-    ],
-    "redirect_uri": "http://localhost:53682/",
-    "secret_store": "./secret.json",
-    "root": "/drive/root"
-}
+onedrive-uploader config
 ```
 
-Example ```config.json``` for an App registered with permissions to access the App's Folder:
-```
-{
-    "client_id": "019ccb8b-118f-4559-ad2c-2ccda5b9def6",
-    "client_secret": "some-client-secret",
-    "scopes": [
-        "Files.ReadWrite.AppFolder",
-        "offline_access"
-    ],
-    "redirect_uri": "http://localhost:53682/",
-    "secret_store": "./secret.json",
-    "root": "/drive/special/approot"
-}
-```
-
-You can set the following properties:
-* ```client_id```: Application (client) ID from Azure App registration
-* ```client_secret```: Client Secret Value from Azure App registration
-* ```scopes```: Permission scopes
-* ```redirect_uri```: Redirect URL (required for login only, must match the URL set in your Azure App)
-* ```secret_store```: Path to a file where the access and refresh tokens will be stored
-* ```root```: Root folder within your OneDrive
-
-### 4. Perform login
-To log in with your OneDrive account, execute the following command:
+After that, execute the following command to log in with your OneDrive account:
 ```
 onedrive-uploader login
 ```
 
 For headless machines you must perform the actual login on a computer *with* a web browser. To do this, you can...
-* ...either have the same ```config.json``` on your headless machine and your computer with a web browser and then copy the ```secret.json``` to the headless computer after having logged in
+* ...either run the ```config``` and ```login``` commands on another computer with a web browser and then copy the ```config.json``` to the headless computer after having logged in
 * ...or forward port 53682 from your computer with a web brower to your headless machine, e.g. by using SSH: ```ssh -L 53682:headless_ip:53682 user@headless_ip```
+
+The configuration file is stored in the following directory (if not specified otherwise using the ```-c``` parameter):
+
+* Linux: ```${HOME}/.config/onedrive-uploader```
+* MacOS: ```${HOME}/Library/Application Support/onedrive-uploader```
+* Windows: ```${APPDATA}/onedrive-uploader```
 
 ## Commands and example usage
 Create a new remote directory named "test":
@@ -153,3 +120,14 @@ Use config file at a specific path:
 ```
 onedrive-uploader -c /path/to/config.json mkdir test
 ```
+
+### Important note for users of version < 0.6
+The configuration file format and path has changed as of version 0.6.
+
+Please run the following command to migrate your existing configuration file to the new file format and location after having installed the latest version of OneDrive Uploader:
+
+```
+onedrive-uploader migrate /path/to/existing/config.json
+```
+
+You can safely delete your existing ```config.json``` and ```secret.json``` files after the migration has been performed successfully.

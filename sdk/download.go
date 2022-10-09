@@ -67,7 +67,7 @@ func (client *Client) Download(sourceFilePath, targetFolder string) error {
 	if err != nil {
 		return err
 	}
-	req.Header.Add("Authorization", "Bearer "+client.SecretStore.AccessToken)
+	req.Header.Add("Authorization", "Bearer "+client.Config.AccessToken)
 	httpClient := &http.Client{}
 	resp, err := httpClient.Do(req)
 	if err != nil {

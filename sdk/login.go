@@ -2,9 +2,7 @@ package sdk
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
-	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
@@ -18,11 +16,13 @@ type LoginRedeemCodeResponse struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
+/*
 type SecretStore struct {
 	AccessToken  string    `json:"access_token"`
 	RefreshToken string    `json:"refresh_token"`
 	Expiry       time.Time `json:"expiry"`
 }
+*/
 
 const (
 	loginHTMLResponseHeader = "<!doctype html>" +
@@ -52,22 +52,13 @@ func (client *Client) Login() error {
 
 func (client *Client) UpdateSecretStore(grant *LoginRedeemCodeResponse) error {
 	expiry := time.Now().Add(time.Second * time.Duration(grant.ExpiresIn))
-	store := &SecretStore{
-		AccessToken:  grant.AccessToken,
-		RefreshToken: grant.RefreshToken,
-		Expiry:       expiry,
-	}
-	data, err := json.Marshal(store)
-	if err != nil {
-		return err
-	}
-	if err := ioutil.WriteFile(client.Config.SecretStore, data, 0600); err != nil {
-		return err
-	}
-	client.SecretStore = store
-	return nil
+	client.Config.AccessToken = grant.AccessToken
+	client.Config.RefreshToken = grant.RefreshToken
+	client.Config.Expiry = expiry
+	return client.Config.Write()
 }
 
+/*
 func (client *Client) ReadSecretStore() error {
 	data, err := ioutil.ReadFile(client.Config.SecretStore)
 	if err != nil {
@@ -80,6 +71,7 @@ func (client *Client) ReadSecretStore() error {
 	client.SecretStore = &store
 	return nil
 }
+*/
 
 func (client *Client) GetLoginURL() string {
 	params := make(HTTPRequestParams)
@@ -115,7 +107,7 @@ func (client *Client) redeemCodeForAccessToken(code string) (*LoginRedeemCodeRes
 
 func (client *Client) ShouldRenewAccessToken() bool {
 	now := time.Now()
-	diff := now.Sub(client.SecretStore.Expiry)
+	diff := now.Sub(client.Config.Expiry)
 	return diff.Minutes() > -30
 }
 
@@ -124,7 +116,7 @@ func (client *Client) RenewAccessToken() (*LoginRedeemCodeResponse, error) {
 	params["client_id"] = client.Config.ClientID
 	params["redirect_uri"] = client.Config.RedirectURL
 	params["client_secret"] = client.Config.ClientSecret
-	params["refresh_token"] = client.SecretStore.RefreshToken
+	params["refresh_token"] = client.Config.RefreshToken
 	params["grant_type"] = "refresh_token"
 	status, resp, err := client.httpPostForm("https://login.microsoftonline.com/common/oauth2/v2.0/token", params)
 	if err != nil {
