@@ -3,6 +3,10 @@ name: homebrew-update
 on:
   workflow_dispatch:
     branches: [ main ]
+  workflow_run:
+    workflows: ["release"]
+    types:
+      - completed
 
 jobs:
 
