@@ -39,6 +39,11 @@ You can use the following one-liner to perform the necessary steps on Linux and 
 curl -s -L https://git.io/JRie0 | bash
 ```
 
+On MacOS with [Homebrew](https://brew.sh) installed:
+```
+brew install virtualzone/tap/onedrive-uploader
+```
+
 If you want to build the binaries from source instead, clone the repository and execute ```make```. This requires Go to be installed.
 ```
 git clone https://github.com/virtualzone/onedrive-uploader.git
