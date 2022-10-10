@@ -1,0 +1,38 @@
+name: homebrew-update
+
+on:
+  workflow_dispatch:
+    branches: [ main ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout OneDrive Uploader
+      uses: actions/checkout@v2
+      with:
+        path: ./onedrive-uploader
+    - name: Set version env
+      run: echo "CI_VERSION=$(cat ./onedrive-uploader/VERSION | awk NF)" >> $GITHUB_ENV
+    - name: Checkout Homebrew Taps
+      uses: actions/checkout@v2
+      with:
+        repository: virtualzone/homebrew-tap
+        token: ${{ secrets.ACTIONS_TOKEN }}
+        path: ./taps
+    - name: Update Formula
+      run: |
+        URL="https://github.com/virtualzone/onedrive-uploader/archive/refs/tags/${{ env.CI_VERSION }}.tar.gz"
+        CHECKSUM=`curl -sL "${URL}" | sha256sum | awk '{ print $1 }'`
+        cat ./onedrive-uploader/homebrew/onedrive-uploader.rb | sed -e "s/{{version}}/${{ env.CI_VERSION }}/" -e "s/{{sha256sum}}/${CHECKSUM}/" > ./taps/onedrive-uploader.rb
+    - name: Push Homebrew Taps
+          run: |
+            cd ./taps
+            git add .
+            git config user.name github-actions
+            git config user.email github-actions@github.com
+            git commit -am "Update to ${{ env.CI_VERSION }}"
+            git push
