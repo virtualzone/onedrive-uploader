@@ -16,14 +16,6 @@ type LoginRedeemCodeResponse struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
-/*
-type SecretStore struct {
-	AccessToken  string    `json:"access_token"`
-	RefreshToken string    `json:"refresh_token"`
-	Expiry       time.Time `json:"expiry"`
-}
-*/
-
 const (
 	loginHTMLResponseHeader = "<!doctype html>" +
 		"<html>" +
@@ -57,21 +49,6 @@ func (client *Client) UpdateSecretStore(grant *LoginRedeemCodeResponse) error {
 	client.Config.Expiry = expiry
 	return client.Config.Write()
 }
-
-/*
-func (client *Client) ReadSecretStore() error {
-	data, err := ioutil.ReadFile(client.Config.SecretStore)
-	if err != nil {
-		return err
-	}
-	var store SecretStore
-	if err := UnmarshalJSON(&store, data); err != nil {
-		return err
-	}
-	client.SecretStore = &store
-	return nil
-}
-*/
 
 func (client *Client) GetLoginURL() string {
 	params := make(HTTPRequestParams)
