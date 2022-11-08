@@ -72,6 +72,9 @@ func (client *Client) redeemCodeForAccessToken(code string) (*LoginRedeemCodeRes
 		return nil, err
 	}
 	if status != http.StatusOK {
+		if status == http.StatusUnauthorized {
+			return nil, errors.New("verify you're using the client secret's value (not ID) and the API permissions are set correctly")
+		}
 		return nil, client.handleResponseError(status, resp)
 	}
 	var json LoginRedeemCodeResponse
