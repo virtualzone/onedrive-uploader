@@ -2,7 +2,7 @@ package sdk
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"strings"
 	"time"
 )
@@ -33,7 +33,7 @@ func ReadConfigData(data []byte) (*Config, error) {
 }
 
 func ReadConfig(filename string) (*Config, error) {
-	data, err := ioutil.ReadFile(filename)
+	data, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func (config *Config) Write() error {
 	if err != nil {
 		return err
 	}
-	if err := ioutil.WriteFile(config.ConfigFilePath, data, 0600); err != nil {
+	if err := os.WriteFile(config.ConfigFilePath, data, 0600); err != nil {
 		return err
 	}
 	return nil

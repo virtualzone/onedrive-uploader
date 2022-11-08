@@ -2,7 +2,6 @@ package sdk
 
 import (
 	"errors"
-	"io/ioutil"
 	"mime"
 	"os"
 	"path/filepath"
@@ -110,7 +109,7 @@ func (client *Client) startUploadSession(fileName, targetFolder string) (*Upload
 }
 
 func (client *Client) uploadSimple(fileName, mimeType, targetFolder, localFilePath string) error {
-	data, err := ioutil.ReadFile(localFilePath)
+	data, err := os.ReadFile(localFilePath)
 	if err != nil {
 		return err
 	}
