@@ -22,6 +22,7 @@ type transferProgress func(int64)
 type Client struct {
 	Config                  *Config
 	Verbose                 bool
+	UploadSessionRangeSize  int
 	UseTransferSignals      bool
 	ChannelTransferStart    chan fs.FileInfo
 	ChannelTransferProgress chan int64
@@ -32,9 +33,10 @@ type HTTPRequestParams map[string]string
 
 func CreateClient(conf *Config) *Client {
 	client := &Client{
-		Config:             conf,
-		Verbose:            false,
-		UseTransferSignals: false,
+		Config:                 conf,
+		UploadSessionRangeSize: 320 * 30,
+		Verbose:                false,
+		UseTransferSignals:     false,
 	}
 	client.ResetChannels()
 	return client

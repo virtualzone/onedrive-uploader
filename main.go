@@ -12,9 +12,10 @@ import (
 )
 
 type Flags struct {
-	ConfigPath string
-	Verbose    bool
-	Quiet      bool
+	ConfigPath             string
+	Verbose                bool
+	Quiet                  bool
+	UploadSessionRangeSize int
 }
 
 var (
@@ -40,6 +41,7 @@ func printHelp() {
 
 func prepareFlags() {
 	flag.StringVar(&AppFlags.ConfigPath, "c", "", "path to config.json")
+	flag.IntVar(&AppFlags.UploadSessionRangeSize, "u", 320*30, "upload range size in KB (multiple of 320 KB)")
 	flag.BoolVar(&AppFlags.Quiet, "q", false, "output errors only")
 	flag.BoolVar(&AppFlags.Verbose, "v", false, "verbose output")
 	flag.Parse()
@@ -127,6 +129,7 @@ func main() {
 		client = sdk.CreateClient(conf)
 		client.UseTransferSignals = true
 		client.Verbose = AppFlags.Verbose
+		client.UploadSessionRangeSize = AppFlags.UploadSessionRangeSize
 		if cmdDef.InitSecretStore {
 			logVerbose("Reading secret store...")
 			if client.ShouldRenewAccessToken() {

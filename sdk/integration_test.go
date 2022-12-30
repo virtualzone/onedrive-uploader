@@ -92,7 +92,7 @@ func TestUploadDownloadSmall(t *testing.T) {
 func TestUploadDownloadLarge(t *testing.T) {
 	dirName := "/test-" + uuid.New().String()
 	fileName := uuid.New().String() + ".dat"
-	fileSizeKB := (UploadSessionFileSizeLimit / 1000 * 2) + 10
+	fileSizeKB := (UploadSessionFileSizeLimit / 1024 * 2) + 10
 	err := createRandomFile("/tmp/"+fileName, fileSizeKB)
 	checkTestBool(t, true, err == nil)
 	defer os.Remove("/tmp/" + fileName)

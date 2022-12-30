@@ -10,9 +10,8 @@ import (
 )
 
 var (
-	UploadSessionFileSizeLimit int = 4 * 1000 * 1000 // 4 MB
-	UploadSessionMultiple      int = 320 * 1024      // 320 KB
-	UploadSessionRangeSize     int = UploadSessionMultiple * 10
+	UploadSessionFileSizeLimit int = 10 * 1024 * 1024 // 10 MB
+	UploadSessionMultiple      int = 320 * 1024       // 320 KB
 )
 
 type UploadSessionResponse struct {
@@ -63,7 +62,11 @@ func (client *Client) Upload(localFilePath, targetFolder string) error {
 }
 
 func (client *Client) uploadToSession(uploadUrl, mimeType, localFilePath string, fileSize int64) error {
-	data := make([]byte, UploadSessionRangeSize)
+	if (client.UploadSessionRangeSize <= 0) || (client.UploadSessionRangeSize%320 != 0) {
+		return errors.New("upload session range size must be a multiple of 320")
+	}
+	rangeSizeBytes := client.UploadSessionRangeSize * 1024
+	data := make([]byte, rangeSizeBytes)
 	f, err := os.Open(localFilePath)
 	if err != nil {
 		return err
@@ -73,7 +76,7 @@ func (client *Client) uploadToSession(uploadUrl, mimeType, localFilePath string,
 	n := 0
 	for offset < fileSize {
 		n, _ = f.ReadAt(data, offset)
-		if n < UploadSessionRangeSize {
+		if n < rangeSizeBytes {
 			data = append([]byte(nil), data[:n]...)
 		}
 		progress := func(b int64) {
