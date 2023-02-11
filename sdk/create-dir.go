@@ -28,7 +28,7 @@ func (client *Client) CreateDir(path string) error {
 		parentPath = "/" + strings.Join(parentPathParts, "/")
 	}
 	req := &CreateFolderRequest{
-		Name:             newFolder,
+		Name:             strings.TrimSpace(newFolder),
 		Folder:           FolderProperties{},
 		ConflictBehavior: "fail",
 	}
