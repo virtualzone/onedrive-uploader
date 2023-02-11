@@ -27,112 +27,28 @@ func TestCreateDeleteDir(t *testing.T) {
 
 func TestDirInfo(t *testing.T) {
 	dirName := "/test-" + uuid.New().String()
+	testCreateDir(t, dirName, dirName)
+}
 
-	// Create
-	err := IntegrationClient.CreateDir(dirName)
-	checkTestBool(t, err == nil, true)
+func TestDirLeadingSpace(t *testing.T) {
+	dirName := uuid.New().String()
+	testCreateDir(t, "/ test-"+dirName, "/test-"+dirName)
+}
 
-	// Get info
-	item, err := IntegrationClient.Info(dirName)
-	checkTestBool(t, err == nil, true)
-	checkTestBool(t, item.Type == DriveItemTypeFolder, true)
-	checkTestString(t, strings.TrimPrefix(dirName, "/"), item.Name)
-	checkTestInt(t, 0, item.Folder.ChildCount)
-
-	// Delete
-	err = IntegrationClient.Delete(dirName)
-	checkTestBool(t, err == nil, true)
+func TestDirTrailingSpace(t *testing.T) {
+	dirName := uuid.New().String()
+	testCreateDir(t, "/test-"+dirName+" ", "/test-"+dirName)
 }
 
 func TestUploadDownloadSmall(t *testing.T) {
-	dirName := "/test-" + uuid.New().String()
 	fileName := uuid.New().String() + ".txt"
-	err := createRandomFile("/tmp/"+fileName, 1)
-	checkTestBool(t, true, err == nil)
-	defer os.Remove("/tmp/" + fileName)
-	hash1, _ := getSHA1Hash("/tmp/" + fileName)
-	hash256, _ := getSHA256Hash("/tmp/" + fileName)
-
-	// Create
-	err = IntegrationClient.CreateDir(dirName)
-	checkTestBool(t, err == nil, true)
-
-	// Upload
-	err = IntegrationClient.Upload("/tmp/"+fileName, dirName)
-	checkTestBool(t, err == nil, true)
-
-	// Get info on folder
-	item, err := IntegrationClient.Info(dirName)
-	checkTestBool(t, err == nil, true)
-	checkTestBool(t, item.Type == DriveItemTypeFolder, true)
-	checkTestString(t, strings.TrimPrefix(dirName, "/"), item.Name)
-	checkTestInt(t, 1, item.Folder.ChildCount)
-
-	// Get info on file
-	item, err = IntegrationClient.Info(dirName + "/" + fileName)
-	checkTestBool(t, err == nil, true)
-	checkTestBool(t, item.Type == DriveItemTypeFile, true)
-	checkTestString(t, fileName, item.Name)
-	checkTestString(t, "text/plain; charset=utf-8", item.File.MimeType)
-	checkTestInt(t, 1024, int(item.SizeBytes))
-	checkTestString(t, strings.ToUpper(hash1), item.File.Hashes.SHA1)
-	checkTestString(t, strings.ToUpper(hash256), item.File.Hashes.SHA256)
-
-	// Download
-	os.Remove("/tmp/" + fileName)
-	IntegrationClient.Download(dirName+"/"+fileName, "/tmp")
-	hash256Downloaded, _ := getSHA256Hash("/tmp/" + fileName)
-	checkTestString(t, hash256, hash256Downloaded)
-
-	// Delete
-	err = IntegrationClient.Delete(dirName)
-	checkTestBool(t, err == nil, true)
+	testUpload(t, fileName, fileName, 1, "text/plain; charset=utf-8")
 }
 
 func TestUploadDownloadLarge(t *testing.T) {
-	dirName := "/test-" + uuid.New().String()
 	fileName := uuid.New().String() + ".dat"
 	fileSizeKB := (UploadSessionFileSizeLimit / 1024 * 2) + 10
-	err := createRandomFile("/tmp/"+fileName, fileSizeKB)
-	checkTestBool(t, true, err == nil)
-	defer os.Remove("/tmp/" + fileName)
-	hash1, _ := getSHA1Hash("/tmp/" + fileName)
-	hash256, _ := getSHA256Hash("/tmp/" + fileName)
-
-	// Create
-	err = IntegrationClient.CreateDir(dirName)
-	checkTestBool(t, err == nil, true)
-
-	// Upload
-	err = IntegrationClient.Upload("/tmp/"+fileName, dirName)
-	checkTestBool(t, err == nil, true)
-
-	// Get info on folder
-	item, err := IntegrationClient.Info(dirName)
-	checkTestBool(t, err == nil, true)
-	checkTestBool(t, item.Type == DriveItemTypeFolder, true)
-	checkTestString(t, strings.TrimPrefix(dirName, "/"), item.Name)
-	checkTestInt(t, 1, item.Folder.ChildCount)
-
-	// Get info on file
-	item, err = IntegrationClient.Info(dirName + "/" + fileName)
-	checkTestBool(t, err == nil, true)
-	checkTestBool(t, item.Type == DriveItemTypeFile, true)
-	checkTestString(t, fileName, item.Name)
-	checkTestString(t, "application/octet-stream", item.File.MimeType)
-	checkTestInt(t, fileSizeKB*1024, int(item.SizeBytes))
-	checkTestString(t, strings.ToUpper(hash1), item.File.Hashes.SHA1)
-	checkTestString(t, strings.ToUpper(hash256), item.File.Hashes.SHA256)
-
-	// Download
-	os.Remove("/tmp/" + fileName)
-	IntegrationClient.Download(dirName+"/"+fileName, "/tmp")
-	hash256Downloaded, _ := getSHA256Hash("/tmp/" + fileName)
-	checkTestString(t, hash256, hash256Downloaded)
-
-	// Delete
-	err = IntegrationClient.Delete(dirName)
-	checkTestBool(t, err == nil, true)
+	testUpload(t, fileName, fileName, fileSizeKB, "application/octet-stream")
 }
 
 func TestList(t *testing.T) {
@@ -187,6 +103,86 @@ func TestList(t *testing.T) {
 
 	// Delete
 	err = IntegrationClient.Delete(dirName)
+	checkTestBool(t, err == nil, true)
+}
+
+func TestUploadLeadingWhitespace(t *testing.T) {
+	fileName := uuid.New().String() + ".txt"
+	testUpload(t, " "+fileName, fileName, 1, "text/plain; charset=utf-8")
+}
+
+func TestUploadTrailingWhitespace(t *testing.T) {
+	fileName := uuid.New().String() + ".txt"
+	testUpload(t, fileName+" ", fileName, 1, "text/plain; charset=utf-8")
+}
+
+func TestUploadInvalidChars(t *testing.T) {
+	const chars = "~\"#%&*:<>?\\{|}"
+	for i := 0; i < len(chars); i++ {
+		c := string(chars[i])
+		fileName := uuid.New().String()
+		testUpload(t, fileName+"_"+c+"_some.txt", fileName+"_"+"_"+"_some.txt", 1, "text/plain; charset=utf-8")
+	}
+}
+
+func testUpload(t *testing.T, localFileName, expectedRemoteFileName string, sizeKB int, mimeType string) {
+	dirName := "/test-" + uuid.New().String()
+	err := createRandomFile("/tmp/"+localFileName, sizeKB)
+	checkTestBool(t, true, err == nil)
+	defer os.Remove("/tmp/" + localFileName)
+	hash1, _ := getSHA1Hash("/tmp/" + localFileName)
+	hash256, _ := getSHA256Hash("/tmp/" + localFileName)
+
+	// Create
+	err = IntegrationClient.CreateDir(dirName)
+	checkTestBool(t, err == nil, true)
+
+	// Upload
+	err = IntegrationClient.Upload("/tmp/"+localFileName, dirName)
+	checkTestBool(t, err == nil, true)
+
+	// Get info on folder
+	item, err := IntegrationClient.Info(dirName)
+	checkTestBool(t, err == nil, true)
+	checkTestBool(t, item.Type == DriveItemTypeFolder, true)
+	checkTestString(t, strings.TrimPrefix(dirName, "/"), item.Name)
+	checkTestInt(t, 1, item.Folder.ChildCount)
+
+	// Get info on file
+	item, err = IntegrationClient.Info(dirName + "/" + expectedRemoteFileName)
+	checkTestBool(t, err == nil, true)
+	checkTestBool(t, item.Type == DriveItemTypeFile, true)
+	checkTestString(t, expectedRemoteFileName, item.Name)
+	checkTestString(t, mimeType, item.File.MimeType)
+	checkTestInt(t, sizeKB*1024, int(item.SizeBytes))
+	checkTestString(t, strings.ToUpper(hash1), item.File.Hashes.SHA1)
+	checkTestString(t, strings.ToUpper(hash256), item.File.Hashes.SHA256)
+
+	// Download
+	os.Remove("/tmp/" + localFileName)
+	IntegrationClient.Download(dirName+"/"+expectedRemoteFileName, "/tmp")
+	hash256Downloaded, _ := getSHA256Hash("/tmp/" + expectedRemoteFileName)
+	checkTestString(t, hash256, hash256Downloaded)
+
+	// Delete
+	err = IntegrationClient.Delete(dirName)
+	checkTestBool(t, err == nil, true)
+}
+
+func testCreateDir(t *testing.T, dirName string, expectedDirName string) {
+	// Create
+	err := IntegrationClient.CreateDir(dirName)
+	checkTestBool(t, err == nil, true)
+
+	// Get info
+	item, err := IntegrationClient.Info(expectedDirName)
+	checkTestBool(t, err == nil, true)
+	checkTestBool(t, item.Type == DriveItemTypeFolder, true)
+	checkTestString(t, strings.TrimPrefix(expectedDirName, "/"), item.Name)
+	checkTestInt(t, 0, item.Folder.ChildCount)
+
+	// Delete
+	err = IntegrationClient.Delete(expectedDirName)
 	checkTestBool(t, err == nil, true)
 }
 

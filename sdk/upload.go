@@ -14,6 +14,8 @@ var (
 	UploadSessionMultiple      int = 320 * 1024       // 320 KB
 )
 
+const InvalidFilenameCharacters = "~\"#%&*:<>?/\\{|}"
+
 type UploadSessionResponse struct {
 	UploadURL string    `json:"uploadUrl"`
 	Expiry    time.Time `json:"expirationDateTime"`
@@ -29,6 +31,7 @@ func (client *Client) Upload(localFilePath, targetFolder string) error {
 	if fileName == "" || fileName == "." || fileName == ".." {
 		return errors.New("please specify a file, not a directory")
 	}
+	fileName = client.sanitizeFileName(fileName)
 	targetFolder = strings.TrimPrefix(strings.TrimSuffix(targetFolder, "/"), "/")
 	if !strings.HasSuffix(targetFolder, "/") {
 		targetFolder += "/"
@@ -40,7 +43,7 @@ func (client *Client) Upload(localFilePath, targetFolder string) error {
 	if err != nil {
 		return err
 	}
-	mimeType := mime.TypeByExtension(filepath.Ext(localFilePath))
+	mimeType := mime.TypeByExtension(filepath.Ext(strings.TrimSpace(localFilePath)))
 	if mimeType == "" {
 		mimeType = "application/octet-stream"
 	}
@@ -58,6 +61,15 @@ func (client *Client) Upload(localFilePath, targetFolder string) error {
 	}
 	res := client.uploadToSession(session.UploadURL, mimeType, localFilePath, fileStat.Size())
 	client.signalTransferFinish()
+	return res
+}
+
+func (client *Client) sanitizeFileName(fileName string) string {
+	res := strings.TrimSpace(fileName)
+	for i := 0; i < len(InvalidFilenameCharacters); i++ {
+		c := string(InvalidFilenameCharacters[i])
+		res = strings.ReplaceAll(res, c, "_")
+	}
 	return res
 }
 
