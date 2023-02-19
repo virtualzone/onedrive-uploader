@@ -1,7 +1,7 @@
 # OneDrive Uploader
 [![](https://img.shields.io/github/v/release/virtualzone/onedrive-uploader)](https://github.com/virtualzone/onedrive-uploader/releases)
 [![](https://img.shields.io/github/release-date/virtualzone/onedrive-uploader)](https://github.com/virtualzone/onedrive-uploader/releases)
-[![](https://img.shields.io/github/workflow/status/virtualzone/onedrive-uploader/build)](https://github.com/virtualzone/onedrive-uploader/actions)
+[![](https://img.shields.io/github/actions/workflow/status/virtualzone/onedrive-uploader/test.yml?branch=main)](https://github.com/virtualzone/onedrive-uploader/actions)
 [![Go Report Card](https://goreportcard.com/badge/github.com/virtualzone/onedrive-uploader)](https://goreportcard.com/report/github.com/virtualzone/onedrive-uploader)
 [![](https://img.shields.io/github/license/virtualzone/onedrive-uploader)](https://github.com/virtualzone/onedrive-uploader/blob/master/LICENSE)
 
