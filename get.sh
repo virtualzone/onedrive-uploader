@@ -30,7 +30,7 @@ elif [[ "$ARCH" == "armv71" ]]; then
     ARCH="arm"
 fi
 URL=`curl -s https://api.github.com/repos/virtualzone/onedrive-uploader/releases/latest | grep "browser_download_url" | grep "_${OS}_${ARCH}_" | cut -d : -f 2,3 | tr -d \" | xargs`
-if [[ $URL == "" ]]; then
+if [[ "$URL" == "" ]]; then
     echo "Could not find binary for OS '$OS' and architecture '$ARCH'."
     echo "Please check for an appropriate binary at: https://github.com/virtualzone/onedrive-uploader"
     exit 1
