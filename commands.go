@@ -5,11 +5,14 @@ import (
 	"fmt"
 	"io/fs"
 	"io/ioutil"
+	"bufio"
 	"os"
+	"strings"
 	"strconv"
 	"time"
 
 	"github.com/virtualzone/onedrive-uploader/sdk"
+	"github.com/kballard/go-shellquote"
 )
 
 type CommandFunction func(client *sdk.Client, renderer *OutputRenderer, args []string)
@@ -22,7 +25,7 @@ type CommandFunctionDefinition struct {
 }
 
 var (
-	commands = map[string]*CommandFunctionDefinition{
+	commandsInternal = map[string]*CommandFunctionDefinition{
 		"config":   {Fn: cmdConfig, MinArgs: 0, InitSecretStore: false, RequireConfig: false},
 		"login":    {Fn: cmdLogin, MinArgs: 0, InitSecretStore: false, RequireConfig: true},
 		"mkdir":    {Fn: cmdCreateDir, MinArgs: 1, InitSecretStore: true, RequireConfig: true},
@@ -35,8 +38,14 @@ var (
 		"sha256":   {Fn: cmdSHA256, MinArgs: 1, InitSecretStore: true, RequireConfig: true},
 		"migrate":  {Fn: cmdMigrateConfig, MinArgs: 1, InitSecretStore: false, RequireConfig: false},
 		"version":  {Fn: cmdVersion, MinArgs: 0, InitSecretStore: false, RequireConfig: false},
+		"script":   {Fn: cmdScript, MinArgs: 1, InitSecretStore: true, RequireConfig: true},
 	}
+	commands map[string]*CommandFunctionDefinition
 )
+
+func init() {
+	commands = commandsInternal
+}
 
 func cmdConfig(client *sdk.Client, renderer *OutputRenderer, args []string) {
 	targetPath, err := findConfigFilePath()
@@ -286,4 +295,74 @@ func cutString(s string, maxLen int) string {
 		return s
 	}
 	return s[:maxLen]
+}
+
+func cmdScript(client *sdk.Client, renderer *OutputRenderer, args []string) {
+	scriptname := args[0]
+	var scriptFile *os.File
+	var err error
+	usingStdin := false
+	if scriptname != "-" {
+		renderer.initSpinner("Running script...")
+		scriptFile, err = os.Open(scriptname)
+		if err != nil {
+			logError("Could not run script: " + err.Error())
+			return
+		}
+		defer scriptFile.Close()
+	} else {
+		scriptFile = os.Stdin
+		usingStdin = true
+	}
+	scanner := bufio.NewScanner(scriptFile)
+	for scanner.Scan() {
+        // do something with a line
+		line := strings.Trim(scanner.Text(), " ")
+		if len(line) > 0 && line[0] != '#' {
+			//fmt.Printf("line: %s\n", line)
+			scriptArgs, err := shellquote.Split(line)
+			if err != nil {
+				logError("Could not split line ''" + line + "'': " + err.Error())
+				return
+			}
+			cmd, scriptArgs := scriptArgs[0], scriptArgs[1:]
+			//fmt.Printf("cmd: %s, args: %d", cmd, len(scriptArgs))
+			//for i, arg := range scriptArgs {
+			//	fmt.Printf(", %d = %s", i, arg)
+			//}
+			//fmt.Printf("\n")
+			cmdDef := commands[cmd]
+			if cmdDef == nil {
+				if cmd == "help" {
+					printHelp()
+				} else if cmd == "exit" {
+					break
+				} else if usingStdin {
+					print("Unknown command: " + cmd)
+				} else {
+					logError("Unknown command: " + cmd)
+					return
+				}
+			} else {
+				if len(scriptArgs) < cmdDef.MinArgs {
+					if usingStdin {
+						print("Too few arguments for command: " + cmd)
+					} else {
+						logError("Too few arguments for command: " + cmd)
+						return
+					}
+				} else {
+					cmdDef.Fn(client, renderer, scriptArgs)
+				}
+			}
+		}
+    }
+	if ! usingStdin { renderer.stopSpinner() }
+	err = scanner.Err()
+
+	if err != nil {
+		logError("Could not run script: " + err.Error())
+		return
+	}
+	log("Script finished.")
 }
