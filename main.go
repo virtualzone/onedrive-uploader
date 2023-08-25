@@ -34,6 +34,8 @@ func printHelp() {
 	print("  info path                          show info about <path>")
 	print("  sha1 path                          get SHA1 hash for <path>")
 	print("  sha256 path                        get SHA256 hash for <path>")
+	print("  script path                        evaluate <path> as a script")
+	print("  script -                           execute commands from stdin")
 	print("  help                               show help")
 	print("  migrate configPath                 migrate from old (< v0.6) config at <configPath> to current config")
 	print("  version                            show version")

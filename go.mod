@@ -5,7 +5,8 @@ go 1.18
 require (
 	github.com/google/uuid v1.3.0
 	github.com/schollz/progressbar/v3 v3.13.0
-)
+	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
+	)
 
 require (
 	github.com/mattn/go-runewidth v0.0.14 // indirect
