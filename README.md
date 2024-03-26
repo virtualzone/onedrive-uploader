@@ -65,6 +65,7 @@ onedrive-uploader login
 For headless machines you must perform the actual login on a computer *with* a web browser. To do this, you can...
 * ...either run the ```config``` and ```login``` commands on another computer with a web browser and then copy the ```config.json``` to the headless computer after having logged in
 * ...or forward port 53682 from your computer with a web brower to your headless machine, e.g. by using SSH: ```ssh -L 53682:headless_ip:53682 user@headless_ip```
+* ...or use the ```curl``` command with fallback url
 
 The configuration file is stored in the following directory (if not specified otherwise using the ```-c``` parameter):
 
