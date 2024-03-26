@@ -16,13 +16,13 @@ jobs:
 
     steps:
     - name: Checkout OneDrive Uploader
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         path: ./onedrive-uploader
     - name: Set version env
       run: echo "CI_VERSION=$(cat ./onedrive-uploader/VERSION | awk NF)" >> $GITHUB_ENV
     - name: Checkout Homebrew Taps
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: virtualzone/homebrew-tap
         token: ${{ secrets.PAT }}
