@@ -27,6 +27,7 @@ func (r *OutputRenderer) initProgressBar(maxBytes int64, desc string) {
 		progressbar.OptionOnCompletion(func() { fmt.Printf("\n") }),
 		progressbar.OptionSpinnerType(14),
 		progressbar.OptionSetRenderBlankState(true),
+		progressbar.OptionThrottle(50*time.Millisecond),
 	)
 }
 
