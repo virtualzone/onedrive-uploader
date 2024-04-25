@@ -154,7 +154,6 @@ func cmdUpload(client *sdk.Client, renderer *OutputRenderer, args []string) {
 			for !done {
 				bytes := <-client.ChannelTransferProgress
 				renderer.updateProgressBar(bytes)
-				time.Sleep(50 * time.Millisecond)
 			}
 		}()
 		go func() {
@@ -189,7 +188,6 @@ func cmdDownload(client *sdk.Client, renderer *OutputRenderer, args []string) {
 		for !done {
 			bytes := <-client.ChannelTransferProgress
 			renderer.updateProgressBar(bytes)
-			time.Sleep(50 * time.Millisecond)
 		}
 	}()
 	go func() {
