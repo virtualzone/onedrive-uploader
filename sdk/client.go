@@ -166,10 +166,10 @@ func (client *Client) httpRequest(method, uri string, requestHeaders, params HTT
 		},
 	}
 	req, err := http.NewRequest(method, uri, reader)
-	req.ContentLength = int64(reader.Len())
 	if err != nil {
 		return -1, nil, err
 	}
+	req.ContentLength = int64(reader.Len())
 	for name, value := range requestHeaders {
 		req.Header.Add(name, value)
 	}
