@@ -113,9 +113,10 @@ func (client *Client) httpSendFilePart(method, uri, mimeType string, offset, n, 
 	requestHeaders["Content-Type"] = mimeType
 	requestHeaders["Content-Length"] = strconv.FormatInt(n, 10)
 	requestHeaders["Content-Range"] = "bytes " + strconv.FormatInt(offset, 10) + "-" + strconv.FormatInt(n+offset-1, 10) + "/" + strconv.FormatInt(fileSize, 10)
-	if client.Config.AccessToken != "" {
-		requestHeaders["Authorization"] = "Bearer " + client.Config.AccessToken
-	}
+	// fix upload large file error, ref: https://github.com/virtualzone/onedrive-uploader/issues/39
+	// if client.Config.AccessToken != "" {
+	// 	requestHeaders["Authorization"] = "Bearer " + client.Config.AccessToken
+	// }
 	return client.httpRequest(method, uri, requestHeaders, nil, data, progress)
 }
 
