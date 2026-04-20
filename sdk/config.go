@@ -38,8 +38,11 @@ func ReadConfig(filename string) (*Config, error) {
 		return nil, err
 	}
 	config, err := ReadConfigData(data)
+	if err != nil {
+		return nil, err
+	}
 	config.ConfigFilePath = filename
-	return config, err
+	return config, nil
 }
 
 func (config *Config) Write() error {
